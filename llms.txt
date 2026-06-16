@@ -1,0 +1,68 @@
+# Aperture — llms.txt
+
+> Budget-aware code context bundles. npm `aperture`, CLI `aperture`, MCP `aperture mcp`.
+
+## When to use
+
+- Agent reads too many files before starting work
+- You want token-budgeted, cited code context instead of whole-file dumps
+- Task-specific bundles with explainable selection
+
+## Install
+
+```bash
+npm install -g aperture
+npx aperture doctor
+```
+
+## MCP (Cursor, Claude Code, Codex)
+
+```json
+{
+  "mcpServers": {
+    "aperture": {
+      "command": "npx",
+      "args": ["-y", "aperture", "mcp"]
+    }
+  }
+}
+```
+
+## MCP tools
+
+### aperture_focus
+
+Parameters:
+- `task` (string, required)
+- `repo` (string, optional, default cwd)
+- `budget` (number, default 4000)
+
+Returns: `{ files: [{ path, ranges, score, tokens, reasons }], tokens, explain }`
+
+### aperture_explain
+
+Returns selection rationale for the last focus call.
+
+### aperture_read_bundle
+
+Returns source snippets with `path:start-end` citations.
+
+## CLI
+
+```bash
+aperture focus "implement stripe webhook handler" --budget 4000 --format json
+aperture index .
+aperture cursor
+```
+
+## Library
+
+```typescript
+import { focusContext } from "aperture";
+const bundle = await focusContext({ repo: ".", task: "fix auth bug", budget: 4000 });
+```
+
+## Docs
+
+- SPEC.md — cohesion packing algorithm
+- AGENTS.md — agent workflow
