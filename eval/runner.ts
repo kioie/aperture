@@ -43,6 +43,11 @@ const cases: Case[] = [
     expectPathIncludes: ["router", "login"],
     description: "API — router + auth integration",
   },
+  {
+    task: "validate stripe webhook signature",
+    expectPathIncludes: ["stripe"],
+    description: "Payments — webhook signature",
+  },
 ];
 
 let hits = 0;

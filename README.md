@@ -4,7 +4,7 @@
 
 [![npm](https://img.shields.io/npm/v/@kioie/aperture?color=orange)](https://www.npmjs.com/package/@kioie/aperture)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![eval](https://img.shields.io/badge/eval-6%2F6-brightgreen)](#evaluation)
+[![eval](https://img.shields.io/badge/eval-7%2F7-brightgreen)](#evaluation)
 [![MCP](https://img.shields.io/badge/MCP-native-purple)](docs/cursor.md)
 
 ---
@@ -149,7 +149,7 @@ See [SPEC.md](./SPEC.md) for the full algorithm.
 npm run eval
 ```
 
-Current score: **6/6** across auth, payments, user, and API integration tasks.
+Current score: **7/7** across auth, payments, user, and API integration tasks.
 
 ```
 ✓ Auth — login validation
@@ -158,6 +158,7 @@ Current score: **6/6** across auth, payments, user, and API integration tasks.
 ✓ Payments — invoice billing
 ✓ Users — profile update validation
 ✓ API — router + auth integration
+✓ Payments — webhook signature
 ```
 
 See [eval/results.md](./eval/results.md) for the full report.

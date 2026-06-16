@@ -30,4 +30,9 @@
   files: src/api/router.ts, src/auth/login.ts, src/users/profile.ts, src/auth/session.ts
   tokens: 479/4000 · top score: 0.126
 
-Score: 6/6
+- [x] Payments — webhook signature
+  task: "validate stripe webhook signature"
+  files: src/payments/stripe.ts, src/auth/login.ts, src/users/profile.ts, src/api/router.ts
+  tokens: 718/4000 · top score: 0.159
+
+Score: 7/7

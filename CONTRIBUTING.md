@@ -32,7 +32,7 @@ git clone https://github.com/kioie/aperture
 cd aperture
 npm install
 npm test          # unit + integration tests
-npm run eval      # evaluation suite (6/6 cases)
+npm run eval      # evaluation suite (7/7 cases)
 npm run build     # TypeScript compile
 ```
 
@@ -65,7 +65,7 @@ eval/runner.ts          — 6-case evaluation suite
 1. Add a parser in `src/index/extract.ts` (see the TypeScript extractor as a template)
 2. Add fixture files in `tests/fixtures/sample-repo/src/<new-lang>/`
 3. Add eval cases in `eval/runner.ts`
-4. Run `npm run eval` — score should stay at 6/6 (or improve)
+4. Run `npm run eval` — score should stay at 7/7 (or improve)
 
 ## Adding eval cases
 
