@@ -130,6 +130,24 @@ Explain the most recent focus selection (per-symbol reasons).
 }
 ```
 
+### aperture_index
+
+Index a repository and warm the in-memory cache for subsequent focus calls.
+
+**Parameters:**
+- `repo` (string, optional) — repository root (defaults to cwd)
+
+**Returns:**
+```json
+{
+  "repo": "/path/to/repo",
+  "files": 42,
+  "symbols": 318,
+  "edges": 1204,
+  "cached": true
+}
+```
+
 ## Budget guidance
 
 | Work type | Suggested budget |

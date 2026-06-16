@@ -1,0 +1,52 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.kioie/aperture",
+  "title": "Aperture",
+  "description": "Budget-aware code context bundles for coding agents. Graph resonance selection with file citations under a token budget.",
+  "version": "0.1.2",
+  "homepage": "https://github.com/kioie/aperture",
+  "license": "MIT",
+  "categories": ["developer-tools", "ai-agents", "mcp"],
+  "tags": ["mcp", "context-engineering", "code-intelligence", "cursor", "claude-code", "coding-agent", "token-budget"],
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@kioie/aperture",
+      "version": "0.1.2",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeArguments": [
+        {
+          "type": "named",
+          "name": "mcp",
+          "description": "Run Aperture MCP server"
+        }
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "name": "aperture_focus",
+      "description": "Build a token-budgeted code context bundle for a task. Returns file paths, line ranges, scores, and selection reasons."
+    },
+    {
+      "name": "aperture_read_bundle",
+      "description": "Read source snippets from the most recent focus bundle with path:start-end citations."
+    },
+    {
+      "name": "aperture_explain",
+      "description": "Explain per-symbol selection rationale from the most recent focus call."
+    },
+    {
+      "name": "aperture_index",
+      "description": "Index a repository and return symbol graph stats (files, symbols, edges)."
+    }
+  ],
+  "links": {
+    "readme": "https://github.com/kioie/aperture/blob/master/README.md",
+    "agents": "https://github.com/kioie/aperture/blob/master/AGENTS.md",
+    "llms": "https://github.com/kioie/aperture/blob/master/llms.txt",
+    "api-schema": "https://github.com/kioie/aperture/blob/master/docs/agent-api.json"
+  }
+}

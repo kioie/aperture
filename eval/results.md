@@ -37,5 +37,15 @@ Budget: 4000 tokens per case
   files: src/payments/stripe.ts, src/auth/login.ts, src/users/profile.ts, src/api/router.ts, src/payments/billing.ts
   tokens: 862/4000 · top score: 0.159 · recall@4000: 100%
 
-Score: 7/7
+- [x] Payments — invoice creation
+  task: "create invoice for user billing"
+  files: src/auth/login.ts, src/payments/billing.ts, src/api/router.ts, src/payments/stripe.ts, src/users/profile.ts, src/auth/session.ts
+  tokens: 898/4000 · top score: 0.094 · recall@4000: 100%
+
+- [x] Users — profile lookup
+  task: "get user profile by id"
+  files: src/auth/login.ts, src/users/profile.ts, src/api/router.ts
+  tokens: 443/4000 · top score: 0.179 · recall@4000: 100%
+
+Score: 9/9
 Mean recall@4000: 100.0%

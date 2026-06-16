@@ -4,7 +4,7 @@
 
 [![npm](https://img.shields.io/npm/v/@kioie/aperture?color=orange)](https://www.npmjs.com/package/@kioie/aperture)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![eval](https://img.shields.io/badge/eval-7%2F7-brightgreen)](#evaluation)
+[![eval](https://img.shields.io/badge/eval-9%2F9-brightgreen)](#evaluation)
 [![MCP](https://img.shields.io/badge/MCP-native-purple)](docs/cursor.md)
 
 ---
@@ -44,7 +44,7 @@ Symbols: 12/21 · 443 tok / 4000 budget
     ↳ resonance: attached via validateCredentials
 ```
 
-**Result: 443 tokens instead of 47,000. Same quality work.**
+**Result: 443 tokens instead of ~47,000 for this task.**
 
 ---
 
@@ -114,6 +114,7 @@ Once connected, agents call `aperture_focus` before reading any files.
 | `aperture_focus` | Build a cited context bundle — returns file paths, line ranges, scores, reasons |
 | `aperture_read_bundle` | Fetch source snippets with `path:start-end` citations |
 | `aperture_explain` | Per-symbol selection rationale for debugging bad selections |
+| `aperture_index` | Index a repo and warm the cache — returns files, symbols, edges |
 
 **Typical agent loop:**
 
@@ -149,7 +150,7 @@ See [SPEC.md](./SPEC.md) for the full algorithm.
 npm run eval
 ```
 
-Current score: **7/7** across auth, payments, user, and API integration tasks (mean recall@4000: **100%**).
+Current score: **9/9** across auth, payments, users, and API integration tasks (mean recall@4000: **100%**).
 
 ```
 ✓ Auth — login validation
@@ -159,6 +160,8 @@ Current score: **7/7** across auth, payments, user, and API integration tasks (m
 ✓ Users — profile update validation
 ✓ API — router + auth integration
 ✓ Payments — webhook signature
+✓ Payments — invoice creation
+✓ Users — profile lookup
 ```
 
 See [eval/results.md](./eval/results.md) for the full report.

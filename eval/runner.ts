@@ -49,6 +49,16 @@ const cases: Case[] = [
     expectPathIncludes: ["stripe"],
     description: "Payments — webhook signature",
   },
+  {
+    task: "create invoice for user billing",
+    expectPathIncludes: ["billing"],
+    description: "Payments — invoice creation",
+  },
+  {
+    task: "get user profile by id",
+    expectPathIncludes: ["profile"],
+    description: "Users — profile lookup",
+  },
 ];
 
 let hits = 0;

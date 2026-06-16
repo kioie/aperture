@@ -4,14 +4,16 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { focusContext, readBundleSnippet } from "../index.js";
+import { focusContext, warmIndex, readBundleSnippet, indexRepository } from "../index.js";
+import { getVersion } from "../version.js";
 
 let lastRepo = process.cwd();
 let lastBundle: Awaited<ReturnType<typeof focusContext>> | null = null;
 
 export async function startApertureMcpServer(): Promise<void> {
+  const version = getVersion();
   const server = new Server(
-    { name: "aperture", version: "0.1.1" },
+    { name: "aperture", version },
     { capabilities: { tools: {} } },
   );
 
@@ -20,29 +22,39 @@ export async function startApertureMcpServer(): Promise<void> {
       {
         name: "aperture_focus",
         description:
-          "Build a token-budgeted code context bundle for a task. Returns file paths, line ranges, scores, and citations.",
+          "Build a token-budgeted code context bundle for a task. Call this before reading files. Returns file paths, line ranges, scores, and selection reasons.",
         inputSchema: {
           type: "object",
           properties: {
-            task: { type: "string", description: "What the agent is trying to accomplish" },
+            task: { type: "string", description: "What the agent is trying to accomplish (verb + target)" },
             repo: { type: "string", description: "Absolute or relative repository root" },
-            budget: { type: "number", default: 4000 },
+            budget: { type: "number", default: 4000, description: "Token budget for the bundle" },
           },
           required: ["task"],
         },
       },
       {
-        name: "aperture_explain",
-        description: "Explain the most recent focus selection (per-symbol reasons).",
-        inputSchema: { type: "object", properties: {} },
-      },
-      {
         name: "aperture_read_bundle",
-        description: "Read source snippets from the most recent bundle with line citations.",
+        description: "Read source snippets from the most recent focus bundle with path:start-end citations.",
         inputSchema: {
           type: "object",
           properties: {
             maxTokens: { type: "number", description: "Optional cap on returned text" },
+          },
+        },
+      },
+      {
+        name: "aperture_explain",
+        description: "Explain per-symbol selection rationale from the most recent focus call.",
+        inputSchema: { type: "object", properties: {} },
+      },
+      {
+        name: "aperture_index",
+        description: "Index a repository and return symbol graph stats. Warms the cache for subsequent focus calls.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            repo: { type: "string", description: "Repository root to index" },
           },
         },
       },
@@ -55,11 +67,22 @@ export async function startApertureMcpServer(): Promise<void> {
 
     if (name === "aperture_focus") {
       const task = String(payload.task ?? "");
+      if (!task.trim()) {
+        return text({ error: "task is required — describe what the agent is trying to accomplish" });
+      }
       const repo = String(payload.repo ?? lastRepo);
       lastRepo = repo;
       const budget = Number(payload.budget ?? 4000);
       lastBundle = await focusContext({ task, repo, budget });
       return text(lastBundle);
+    }
+
+    if (name === "aperture_index") {
+      const repo = String(payload.repo ?? lastRepo);
+      lastRepo = repo;
+      await warmIndex(repo);
+      const { stats } = await indexRepository({ repo });
+      return text({ repo, ...stats, cached: true });
     }
 
     if (name === "aperture_explain") {
@@ -92,12 +115,22 @@ export async function startApertureMcpServer(): Promise<void> {
 
     if (name === "aperture_read_bundle") {
       if (!lastBundle) return text({ error: "No bundle yet — call aperture_focus first" });
-      const sections = lastBundle.files.map((f) => ({
-        path: f.path,
-        citation: f.ranges.map((r) => `${f.path}:${r.start}-${r.end}`).join(", "),
-        content: readBundleSnippet(lastRepo, f),
-      }));
-      return text({ sections });
+      const maxTokens = payload.maxTokens ? Number(payload.maxTokens) : undefined;
+      let used = 0;
+      const sections = [];
+      for (const f of lastBundle.files) {
+        const content = readBundleSnippet(lastRepo, f);
+        const tokens = Math.ceil(content.length / 4);
+        if (maxTokens !== undefined && used + tokens > maxTokens) break;
+        used += tokens;
+        sections.push({
+          path: f.path,
+          citation: f.ranges.map((r) => `${f.path}:${r.start}-${r.end}`).join(", "),
+          content,
+          tokens,
+        });
+      }
+      return text({ sections, tokens: used });
     }
 
     throw new Error(`Unknown tool: ${name}`);

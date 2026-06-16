@@ -188,6 +188,28 @@ Example response:
 }
 ```
 
+### aperture_index
+
+Index a repository and warm the cache for subsequent focus calls. Optional pre-step on large repos.
+
+Input schema:
+```json
+{
+  "repo": { "type": "string", "description": "Repository root (default: cwd)" }
+}
+```
+
+Example response:
+```json
+{
+  "repo": "/path/to/repo",
+  "files": 42,
+  "symbols": 318,
+  "edges": 1204,
+  "cached": true
+}
+```
+
 ## CLI reference
 
 ```bash
@@ -199,7 +221,7 @@ aperture focus "<task>" [options]
 aperture index [path]           # Index repo, print stats
 aperture demo                   # Run on built-in sample repo
 aperture cursor                 # Print Cursor MCP config
-aperture doctor                 # Environment self-check
+aperture doctor [--json]          # Environment self-check
 aperture mcp                    # Start MCP server (stdio)
 ```
 

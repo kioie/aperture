@@ -23,7 +23,7 @@ Symbols: 13/21 · 528 tok / 4000 budget
     ↳ resonance: handleWebhook calls validateWebhookSignature
 ```
 
-**Token savings vs. reading all files: 47,000 → 528 (98.9% reduction)**
+**528 tokens vs reading all indexed files (~47k tokens in this fixture).**
 
 ---
 

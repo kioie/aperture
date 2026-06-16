@@ -203,6 +203,26 @@
           "files": { "type": "array" }
         }
       }
+    },
+    {
+      "name": "aperture_index",
+      "description": "Index a repository and warm the in-memory cache. Returns symbol graph stats (files, symbols, edges).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string", "description": "Repository root (default: cwd)" }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string" },
+          "files": { "type": "integer" },
+          "symbols": { "type": "integer" },
+          "edges": { "type": "integer" },
+          "cached": { "type": "boolean" }
+        }
+      }
     }
   ],
   "mcpConfig": {
