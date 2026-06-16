@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "aperture": {
+      "command": "npx",
+      "args": ["-y", "aperture", "mcp"]
+    }
+  }
+}

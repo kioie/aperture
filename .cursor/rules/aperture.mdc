@@ -1,0 +1,47 @@
+---
+description: Use Aperture MCP to get task-focused code bundles before reading files
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.py"]
+alwaysApply: true
+---
+
+# Aperture — context-first workflow
+
+When working on tasks in this codebase, use the Aperture MCP server to get a token-budgeted, cited context bundle **before** reading files or running grep.
+
+## Workflow
+
+1. **Start every task with `aperture_focus`:**
+   ```
+   aperture_focus(task="<verb + target>", budget=4000)
+   ```
+   This returns the most relevant files and line ranges for the task.
+
+2. **Load source content with `aperture_read_bundle`:**
+   Returns actual code with `path:start-end` citations.
+
+3. **Work using cited ranges.** The citations tell you exactly where to look and edit.
+
+4. **If selection seems off:** call `aperture_explain`, adjust task wording, retry.
+
+## Task string examples
+
+| Situation | Task string |
+|-----------|------------|
+| Auth bug | `"fix login validation logic in auth module"` |
+| New feature | `"add rate limiting middleware to API router"` |
+| Payment error | `"stripe webhook handler for payment_intent.failed"` |
+| Refactor | `"refactor session creation to use JWT tokens"` |
+
+## Budget guide
+
+- Bugfix: 3000–5000
+- New feature: 5000–8000
+- Exploration: 2000–4000
+
+## Setup
+
+```bash
+aperture cursor   # prints MCP config snippet
+```
+
+Add to `~/.cursor/mcp.json` → restart Cursor → tools appear automatically.

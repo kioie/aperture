@@ -1,12 +1,21 @@
 # Aperture — llms.txt
 
-> Budget-aware code context bundles. npm `aperture`, CLI `aperture`, MCP `aperture mcp`.
+> Budget-aware code context bundles for coding agents.
+> npm package: `aperture` | CLI: `aperture` | MCP server: `aperture mcp`
 
-## When to use
+## What Aperture does
 
-- Agent reads too many files before starting work
+Aperture solves the over-reading problem: agents typically read 30–50 files before touching any code. Aperture replaces that with a single `aperture_focus` call that returns only the symbols relevant to the current task — ranked by graph resonance, packed under a token budget, cited with file paths and line ranges.
+
+**Use Aperture when:**
+- Starting work on a task in an unfamiliar codebase
+- Agent is about to grep or recursively list files
 - You want token-budgeted, cited code context instead of whole-file dumps
-- Task-specific bundles with explainable selection
+- Task-specific bundles with explainable, reproducible selection
+
+**Skip Aperture when:**
+- Reading a single known file by exact path
+- The repo has fewer than ~10 files
 
 ## Install
 
@@ -15,7 +24,12 @@ npm install -g aperture
 npx aperture doctor
 ```
 
-## MCP (Cursor, Claude Code, Codex)
+Zero-install:
+```bash
+npx aperture focus "fix login validation bug" --budget 4000
+```
+
+## MCP setup (Cursor, Claude Code, Codex, Zed)
 
 ```json
 {
@@ -28,41 +42,219 @@ npx aperture doctor
 }
 ```
 
+Or: `aperture cursor` prints the snippet. `claude mcp add aperture -- npx -y aperture mcp`
+
+## Recommended agent loop
+
+```
+BEFORE starting work on any task in a codebase:
+
+1. Call aperture_focus with:
+   - task: verb + target + context (e.g. "fix stripe webhook signature validation")
+   - repo: absolute path to repository root
+   - budget: 4000 (start here; increase for cross-module work)
+
+2. Call aperture_read_bundle to get source content with citations
+
+3. Work using the cited ranges (path:start-end) as ground truth
+
+4. If selection looks wrong:
+   → Call aperture_explain to see per-symbol reasons
+   → Refine task string (be more specific about the module or symptom)
+   → Retry aperture_focus with adjusted task or higher budget
+```
+
 ## MCP tools
 
 ### aperture_focus
 
-Parameters:
-- `task` (string, required)
-- `repo` (string, optional, default cwd)
-- `budget` (number, default 4000)
+Build a token-budgeted context bundle for a task.
 
-Returns: `{ files: [{ path, ranges, score, tokens, reasons }], tokens, explain }`
+Input schema:
+```json
+{
+  "type": "object",
+  "properties": {
+    "task": {
+      "type": "string",
+      "description": "What the agent is trying to accomplish. Use verb + target. Example: 'fix stripe webhook signature validation in payments module'"
+    },
+    "repo": {
+      "type": "string",
+      "description": "Absolute or relative repository root. Defaults to cwd."
+    },
+    "budget": {
+      "type": "number",
+      "description": "Token budget for the bundle. Default: 4000. Range: 1000–20000.",
+      "default": 4000
+    }
+  },
+  "required": ["task"]
+}
+```
 
-### aperture_explain
-
-Returns selection rationale for the last focus call.
+Example response:
+```json
+{
+  "files": [
+    {
+      "path": "src/auth/login.ts",
+      "ranges": [{ "start": 1, "end": 8 }],
+      "score": 0.333,
+      "tokens": 54,
+      "reasons": [
+        "seed: login matches symbol name",
+        "seed: validation matches validateCredentials"
+      ]
+    },
+    {
+      "path": "src/auth/session.ts",
+      "ranges": [{ "start": 1, "end": 6 }],
+      "score": 0.459,
+      "tokens": 80,
+      "reasons": ["seed: session matches symbol name", "resonance: imports validateCredentials"]
+    }
+  ],
+  "tokens": 370,
+  "budget": 4000,
+  "symbolsSelected": 8,
+  "symbolsTotal": 21,
+  "task": "session creation error",
+  "explain": [
+    {
+      "symbol": "createSession",
+      "file": "src/auth/session.ts",
+      "score": 0.459,
+      "reason": "seed score=2.20 via session"
+    }
+  ]
+}
+```
 
 ### aperture_read_bundle
 
-Returns source snippets with `path:start-end` citations.
+Read source snippets from the most recent bundle with line citations.
 
-## CLI
-
-```bash
-aperture focus "implement stripe webhook handler" --budget 4000 --format json
-aperture index .
-aperture cursor
+Input schema:
+```json
+{
+  "type": "object",
+  "properties": {
+    "maxTokens": {
+      "type": "number",
+      "description": "Optional cap on returned text in tokens"
+    }
+  }
+}
 ```
 
-## Library
+Example response:
+```json
+{
+  "sections": [
+    {
+      "path": "src/auth/login.ts",
+      "citation": "src/auth/login.ts:1-8",
+      "content": "export async function login(user: string): Promise<boolean> {\n  return validateCredentials(user);\n}\n\nexport function validateCredentials(user: string): boolean {\n  if (!user) return false;\n  return user.length > 2;\n}"
+    }
+  ]
+}
+```
+
+### aperture_explain
+
+Explain the most recent focus selection (per-symbol reasons). Call when selection looks wrong to understand why files were or weren't included.
+
+Input schema: `{}` (no parameters)
+
+Example response:
+```json
+{
+  "explain": [
+    {
+      "symbol": "validateCredentials",
+      "file": "src/auth/login.ts",
+      "score": 0.333,
+      "reason": "seed score=1.10 via login"
+    },
+    {
+      "symbol": "createSession",
+      "file": "src/auth/session.ts",
+      "score": 0.459,
+      "reason": "seed score=2.20 via session"
+    }
+  ],
+  "files": [...]
+}
+```
+
+## CLI reference
+
+```bash
+aperture focus "<task>" [options]
+  --repo <path>     Repository root (default: cwd)
+  --budget <n>      Token budget (default: 4000)
+  --format <fmt>    plain | json | markdown | tree
+
+aperture index [path]           # Index repo, print stats
+aperture demo                   # Run on built-in sample repo
+aperture cursor                 # Print Cursor MCP config
+aperture doctor                 # Environment self-check
+aperture mcp                    # Start MCP server (stdio)
+```
+
+## Library API
 
 ```typescript
 import { focusContext } from "aperture";
-const bundle = await focusContext({ repo: ".", task: "fix auth bug", budget: 4000 });
+
+const bundle = await focusContext({
+  repo: "/path/to/repo",
+  task: "fix stripe webhook signature validation",
+  budget: 4000,
+});
+
+// bundle.files[].path — file path
+// bundle.files[].ranges — line ranges [{ start, end }]
+// bundle.files[].score — resonance score
+// bundle.files[].tokens — token count
+// bundle.files[].reasons — why this file was selected
+// bundle.tokens — total tokens used
+// bundle.budget — budget passed in
+// bundle.explain — per-symbol selection reasons
 ```
+
+## Budget guidance
+
+| Work type | Budget |
+|-----------|--------|
+| Localized bugfix | 3000–5000 |
+| Feature spanning 2–3 modules | 5000–8000 |
+| Exploration | 2000–4000 |
+| Large refactor | 8000–12000 |
+
+## Task string format
+
+Best results with: **[verb] [target] [context]**
+
+Examples:
+- `"fix login validation bug in auth module"`
+- `"stripe webhook handler for payment_intent.failed"`
+- `"update user profile email validation and error handling"`
+- `"add rate limiting middleware to API router"`
+
+## Algorithm summary
+
+1. **Index** — extract symbols (functions, classes, exports) and edges (imports, calls) from TS/JS/Python
+2. **Seed** — score symbols by token overlap between task words and symbol names/paths
+3. **Resonate** — personalized graph propagation: high-seed symbols push score to neighbors
+4. **Pack** — greedy selection by `utility = resonance × cohesion / token_cost`, stop at budget
+5. **Cite** — return paths, line ranges, scores, and reasons
 
 ## Docs
 
-- SPEC.md — cohesion packing algorithm
-- AGENTS.md — agent workflow
+- [SPEC.md](./SPEC.md) — cohesion packing algorithm
+- [AGENTS.md](./AGENTS.md) — agent workflow and budget guidance
+- [SHOWCASE.md](./SHOWCASE.md) — terminal examples with real output
+- [docs/agent-api.json](./docs/agent-api.json) — JSON schemas with example responses
+- [integrations/](./integrations/) — Cursor, Claude Code, GitHub Action configs

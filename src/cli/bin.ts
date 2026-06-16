@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { writeFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { focusContext, indexRepository } from "../index.js";
 import { readBundleSnippet } from "../index/builder.js";
 
@@ -65,6 +67,64 @@ program
   .action(async () => {
     const { startApertureMcpServer } = await import("../mcp/server.js");
     await startApertureMcpServer();
+  });
+
+program
+  .command("demo")
+  .description("Run Aperture on the built-in sample repo and display a formatted bundle")
+  .option("-f, --format <fmt>", "plain | json | markdown | tree", "tree")
+  .action(async (opts: { format: string }) => {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    // resolve sample-repo relative to the installed package
+    const candidates = [
+      join(__dirname, "../../tests/fixtures/sample-repo"),
+      join(__dirname, "../../../tests/fixtures/sample-repo"),
+    ];
+    const { existsSync } = await import("node:fs");
+    const repo = candidates.find((p) => existsSync(p)) ?? (candidates[0] as string);
+
+    const tasks = [
+      { task: "stripe webhook handler payment failed", label: "Payments — webhook" },
+      { task: "fix login validation bug", label: "Auth — login validation" },
+      { task: "update user profile email validation", label: "Users — profile" },
+    ];
+
+    console.log("\n\x1b[1m\x1b[36m  Aperture Demo\x1b[0m — budget-aware code context bundles\n");
+    console.log("  Sample repo: src/auth, src/payments, src/users, src/api\n");
+
+    for (const { task, label } of tasks) {
+      const bundle = await focusContext({ repo, task, budget: 4000 });
+      const pct = Math.round((bundle.tokens / bundle.budget) * 100);
+      const bar = "█".repeat(Math.round(pct / 5)) + "░".repeat(20 - Math.round(pct / 5));
+
+      console.log(`\x1b[1m  ▶ ${label}\x1b[0m`);
+      console.log(`    task:    "${task}"`);
+      console.log(`    tokens:  ${bundle.tokens}/${bundle.budget} [${bar}] ${pct}%`);
+      console.log(`    symbols: ${bundle.symbolsSelected}/${bundle.symbolsTotal} selected`);
+      console.log();
+
+      if (opts.format === "tree") {
+        for (const f of bundle.files) {
+          const ranges = f.ranges.map((r) => `L${r.start}-${r.end}`).join(" ");
+          const scoreBar = "▓".repeat(Math.round(f.score * 30));
+          console.log(`    \x1b[33m${f.path}\x1b[0m  ${ranges}  \x1b[2m${f.tokens}tok  score=${f.score.toFixed(3)}  ${scoreBar}\x1b[0m`);
+          if (f.reasons?.length) {
+            for (const r of f.reasons.slice(0, 2)) {
+              console.log(`      \x1b[2m↳ ${r}\x1b[0m`);
+            }
+          }
+        }
+      } else {
+        for (const f of bundle.files) {
+          const ranges = f.ranges.map((r) => `${r.start}-${r.end}`).join(", ");
+          console.log(`    ${f.path}  score=${f.score.toFixed(3)}  ${f.tokens} tok  lines ${ranges}`);
+        }
+      }
+      console.log();
+    }
+
+    console.log("  \x1b[2mRun `aperture focus \"<your task>\" --format tree` on your own repo.\x1b[0m\n");
   });
 
 program

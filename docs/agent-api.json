@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Aperture MCP API",
+  "version": "0.1.0",
+  "description": "JSON schemas and example responses for Aperture MCP tools. Used by agents for auto-discovery.",
+  "tools": [
+    {
+      "name": "aperture_focus",
+      "description": "Build a token-budgeted code context bundle for a task. Returns file paths, line ranges, resonance scores, token counts, and selection reasons. Call this before reading any files.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "What the agent is trying to accomplish. Use verb + target + context for best results. Example: 'fix stripe webhook signature validation in payments module'."
+          },
+          "repo": {
+            "type": "string",
+            "description": "Absolute or relative repository root path. Defaults to process cwd."
+          },
+          "budget": {
+            "type": "number",
+            "description": "Token budget for the bundle. Default: 4000. Increase to 8000 for cross-module work.",
+            "default": 4000,
+            "minimum": 500,
+            "maximum": 50000
+          }
+        },
+        "required": ["task"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "task": { "type": "string" },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": { "type": "string", "description": "Relative file path from repo root" },
+                "ranges": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "start": { "type": "integer" },
+                      "end": { "type": "integer" }
+                    }
+                  }
+                },
+                "score": { "type": "number", "description": "Resonance score (0-1, higher = more relevant)" },
+                "tokens": { "type": "integer", "description": "Token count for this file's selected ranges" },
+                "reasons": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Human-readable reasons for selection"
+                }
+              }
+            }
+          },
+          "tokens": { "type": "integer", "description": "Total tokens used across all files" },
+          "budget": { "type": "integer" },
+          "symbolsSelected": { "type": "integer" },
+          "symbolsTotal": { "type": "integer" },
+          "explain": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": { "type": "string" },
+                "file": { "type": "string" },
+                "score": { "type": "number" },
+                "reason": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "input": { "task": "fix login validation bug", "budget": 4000 },
+          "output": {
+            "task": "fix login validation bug",
+            "files": [
+              {
+                "path": "src/auth/login.ts",
+                "ranges": [{ "start": 1, "end": 8 }],
+                "score": 0.333,
+                "tokens": 54,
+                "reasons": ["seed: login matches symbol name", "seed: validation matches validateCredentials"]
+              },
+              {
+                "path": "src/api/router.ts",
+                "ranges": [{ "start": 17, "end": 41 }],
+                "score": 0.1,
+                "tokens": 109,
+                "reasons": ["resonance: handleLogin is a direct caller of login"]
+              }
+            ],
+            "tokens": 443,
+            "budget": 4000,
+            "symbolsSelected": 12,
+            "symbolsTotal": 21,
+            "explain": [
+              { "symbol": "login", "file": "src/auth/login.ts", "score": 0.333, "reason": "seed score=1.10 via login" },
+              { "symbol": "validateCredentials", "file": "src/auth/login.ts", "score": 0.333, "reason": "seed score=1.10 via validation" }
+            ]
+          }
+        },
+        {
+          "input": { "task": "stripe webhook handler payment failed", "budget": 4000 },
+          "output": {
+            "task": "stripe webhook handler payment failed",
+            "files": [
+              {
+                "path": "src/payments/stripe.ts",
+                "ranges": [{ "start": 8, "end": 35 }],
+                "score": 0.147,
+                "tokens": 275,
+                "reasons": ["seed: stripe matches path", "seed: webhook matches handleStripeWebhook", "seed: payment matches processSuccessfulPayment"]
+              },
+              {
+                "path": "src/payments/billing.ts",
+                "ranges": [{ "start": 10, "end": 24 }],
+                "score": 0.078,
+                "tokens": 144,
+                "reasons": ["resonance: chargeInvoice calls processSuccessfulPayment"]
+              }
+            ],
+            "tokens": 528,
+            "budget": 4000,
+            "symbolsSelected": 13,
+            "symbolsTotal": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "aperture_read_bundle",
+      "description": "Read source snippets from the most recent aperture_focus bundle with path:start-end citations. Call after aperture_focus to get the actual code content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "maxTokens": {
+            "type": "number",
+            "description": "Optional cap on returned text in tokens. Omit to return all bundle content."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "sections": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": { "type": "string" },
+                "citation": { "type": "string", "description": "Citation string: path:start-end" },
+                "content": { "type": "string", "description": "Source code content for the selected ranges" }
+              }
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "input": {},
+          "output": {
+            "sections": [
+              {
+                "path": "src/auth/login.ts",
+                "citation": "src/auth/login.ts:1-8",
+                "content": "export async function login(user: string): Promise<boolean> {\n  return validateCredentials(user);\n}\n\nexport function validateCredentials(user: string): boolean {\n  if (!user) return false;\n  return user.length > 2;\n}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "aperture_explain",
+      "description": "Explain the most recent focus selection with per-symbol reasons. Use when the bundle seems wrong — adjust task wording based on the explanation and retry aperture_focus.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "explain": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": { "type": "string" },
+                "file": { "type": "string" },
+                "score": { "type": "number" },
+                "reason": { "type": "string" }
+              }
+            }
+          },
+          "files": { "type": "array" }
+        }
+      }
+    }
+  ],
+  "mcpConfig": {
+    "command": "npx",
+    "args": ["-y", "aperture", "mcp"]
+  },
+  "agentWorkflow": {
+    "steps": [
+      "1. Call aperture_focus(task, repo, budget) — get cited bundle",
+      "2. Call aperture_read_bundle() — get source content with citations",
+      "3. Work using cited path:start-end ranges",
+      "4. If wrong: aperture_explain() → refine task → retry"
+    ],
+    "note": "Always call aperture_focus before any Read, Grep, or file-listing operation on an unfamiliar codebase."
+  }
+}
