@@ -102,6 +102,17 @@ export interface NamedImport {
   names: string[];
 }
 
+export interface ReExportBinding {
+  spec: string;
+  /** Empty `names` means `export * from`. */
+  names: Array<{ exported: string; source: string }>;
+}
+
+export interface ExportLocation {
+  file: string;
+  symbolName: string;
+}
+
 /** Parse TS import declarations into module spec + imported symbol names. */
 export function extractNamedImportsTs(content: string): NamedImport[] {
   const out: NamedImport[] = [];
@@ -128,6 +139,99 @@ export function extractNamedImportsTs(content: string): NamedImport[] {
   }
 
   return out;
+}
+
+/** Parse TS re-export declarations (`export { x } from` and `export * from`). */
+export function extractReExportsTs(content: string): ReExportBinding[] {
+  const out: ReExportBinding[] = [];
+  const namedRe = /export\s+(?:type\s+)?\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/g;
+  let m: RegExpExecArray | null;
+  while ((m = namedRe.exec(content)) !== null) {
+    const names = (m[1] ?? "")
+      .split(",")
+      .map((part) => {
+        const trimmed = part.trim();
+        if (!trimmed) return null;
+        const asMatch = trimmed.match(/^(\w+)\s+as\s+(\w+)$/);
+        if (asMatch) return { source: asMatch[1]!, exported: asMatch[2]! };
+        return { source: trimmed, exported: trimmed };
+      })
+      .filter((n): n is { exported: string; source: string } => Boolean(n));
+    if (m[2] && names.length) out.push({ spec: m[2], names });
+  }
+
+  const starRe = /export\s+\*\s+from\s+['"]([^'"]+)['"]/g;
+  while ((m = starRe.exec(content)) !== null) {
+    if (m[1]) out.push({ spec: m[1], names: [] });
+  }
+
+  return out;
+}
+
+/** Resolve public exports for a file, following re-export chains through barrel files. */
+export function buildFileExportMap(
+  file: string,
+  fileSymbols: ReadonlyMap<string, SymbolNode[]>,
+  fileContents: ReadonlyMap<string, string>,
+  knownFiles: ReadonlySet<string>,
+  cache: Map<string, Map<string, ExportLocation>>,
+  visiting: Set<string> = new Set(),
+): Map<string, ExportLocation> {
+  const cached = cache.get(file);
+  if (cached) return cached;
+  if (visiting.has(file)) return new Map();
+
+  visiting.add(file);
+  const map = new Map<string, ExportLocation>();
+
+  for (const s of fileSymbols.get(file) ?? []) {
+    if (s.kind === "module") continue;
+    const short = s.name.split(".").pop() ?? s.name;
+    map.set(short, { file, symbolName: s.name });
+  }
+
+  const content = fileContents.get(file) ?? "";
+  for (const re of extractReExportsTs(content)) {
+    const target = resolveImportPath(file, re.spec, knownFiles);
+    if (!target) continue;
+    const targetMap = buildFileExportMap(
+      target,
+      fileSymbols,
+      fileContents,
+      knownFiles,
+      cache,
+      visiting,
+    );
+
+    if (re.names.length === 0) {
+      for (const [name, loc] of targetMap) {
+        if (!map.has(name)) map.set(name, loc);
+      }
+    } else {
+      for (const { exported, source } of re.names) {
+        const loc = targetMap.get(source);
+        if (loc) map.set(exported, loc);
+      }
+    }
+  }
+
+  visiting.delete(file);
+  cache.set(file, map);
+  return map;
+}
+
+/** True when a file only re-exports from other modules (typical barrel). */
+export function isBarrelFile(content: string): boolean {
+  const lines = content
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && !l.startsWith("//") && !l.startsWith("/*"));
+  if (lines.length === 0) return false;
+  return lines.every(
+    (line) =>
+      /^export\s+(?:type\s+)?\{[^}]+\}\s+from\s+['"]/.test(line) ||
+      /^export\s+\*\s+from\s+['"]/.test(line),
+  );
 }
 
 /** Resolve a relative import spec to a repo-relative file path, or null. */
@@ -182,11 +286,26 @@ function makeNode(
 }
 
 function findBlockEnd(lines: string[], startLine: number): number {
+  const firstLine = lines[startLine - 1] ?? "";
+  let bodyStartCol = 0;
+  let parenDepth = 0;
+  for (let i = 0; i < firstLine.length; i++) {
+    const ch = firstLine[i];
+    if (ch === "(") parenDepth += 1;
+    else if (ch === ")") parenDepth -= 1;
+    else if (ch === "{" && parenDepth === 0) {
+      bodyStartCol = i;
+      break;
+    }
+  }
+
   let depth = 0;
   let started = false;
   for (let i = startLine - 1; i < lines.length; i++) {
     const line = lines[i] ?? "";
-    for (const ch of line) {
+    const colStart = i === startLine - 1 ? bodyStartCol : 0;
+    for (let j = colStart; j < line.length; j++) {
+      const ch = line[j];
       if (ch === "{") {
         depth += 1;
         started = true;

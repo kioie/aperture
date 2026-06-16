@@ -19,6 +19,14 @@ describe("indexRepository", () => {
     expect(importEdges.length).toBeGreaterThan(0);
     expect(importEdges.some((e) => e.to.includes("login") || e.to.includes("stripe"))).toBe(true);
   });
+
+  it("resolves imports through barrel re-exports", async () => {
+    const { graph } = await indexRepository({ repo });
+    const routerToLogin = graph.edges.filter(
+      (e) => e.kind === "import" && e.from.includes("router") && e.to.includes("login.ts"),
+    );
+    expect(routerToLogin.length).toBeGreaterThan(0);
+  });
 });
 
 describe("focusContext determinism", () => {

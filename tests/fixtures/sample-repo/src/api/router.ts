@@ -1,8 +1,6 @@
-import { login, validateCredentials } from "../auth/login.js";
-import { createSession } from "../auth/session.js";
+import { login, createSession } from "../auth/index.js";
 import { updateProfile, getUserProfile } from "../users/profile.js";
-import { handleStripeWebhook, validateWebhookSignature } from "../payments/stripe.js";
-import { createInvoice } from "../payments/billing.js";
+import { handleStripeWebhook, validateWebhookSignature, createInvoice } from "../payments/index.js";
 
 export type Route = { method: string; path: string; handler: Function };
 

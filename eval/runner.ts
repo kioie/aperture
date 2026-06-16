@@ -59,6 +59,11 @@ const cases: Case[] = [
     expectPathIncludes: ["profile"],
     description: "Users — profile lookup",
   },
+  {
+    task: "auth barrel re-export login flow",
+    expectPathIncludes: ["login", "index"],
+    description: "Auth — barrel index re-exports",
+  },
 ];
 
 let hits = 0;
