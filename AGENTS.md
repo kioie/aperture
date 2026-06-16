@@ -132,7 +132,7 @@ Explain the most recent focus selection (per-symbol reasons).
 
 ### aperture_index
 
-Index a repository and warm the in-memory cache for subsequent focus calls.
+Index a repository and warm the in-memory cache for subsequent focus calls. Also writes/reads `.aperture-cache/index.json` on disk (invalidated when source files change).
 
 **Parameters:**
 - `repo` (string, optional) — repository root (defaults to cwd)

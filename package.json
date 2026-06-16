@@ -1,6 +1,6 @@
 {
   "name": "@kioie/aperture",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Budget-aware code context bundles for coding agents — graph resonance selection with citations, MCP-native.",
   "type": "module",
   "license": "MIT",
@@ -21,6 +21,7 @@
   "files": [
     "dist",
     "tests/fixtures/sample-repo",
+    "tests/fixtures/monorepo",
     "llms.txt",
     "AGENTS.md"
   ],

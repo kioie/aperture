@@ -15,6 +15,12 @@ import {
   type ExportLocation,
 } from "./extract.js";
 import type { CodeGraph, IndexStats, SymbolEdge, SymbolNode } from "../core/types.js";
+import {
+  clearDiskCache,
+  computeFingerprint,
+  loadDiskCache,
+  saveDiskCache,
+} from "./disk-cache.js";
 
 const DEFAULT_IGNORE = [
   "**/node_modules/**",
@@ -28,13 +34,15 @@ export interface IndexOptions {
   repo: string;
   include?: string[];
   exclude?: string[];
+  /** Persist index to `<repo>/.aperture-cache/` (default true). */
+  useDiskCache?: boolean;
 }
 
 export async function indexRepository(options: IndexOptions): Promise<{
   graph: CodeGraph;
   stats: IndexStats;
 }> {
-  const { repo, include, exclude } = options;
+  const { repo, include, exclude, useDiskCache = true } = options;
   const patterns = include?.length
     ? include
     : ["**/*.{ts,tsx,js,jsx,mjs,cjs,py}"];
@@ -48,6 +56,19 @@ export async function indexRepository(options: IndexOptions): Promise<{
     dot: false,
   });
 
+  const relPaths: string[] = [];
+  for (const abs of paths) {
+    const rel = relative(repo, abs).replace(/\\/g, "/");
+    if (!ig.ignores(rel)) relPaths.push(rel);
+  }
+  relPaths.sort((a, b) => a.localeCompare(b));
+
+  if (useDiskCache) {
+    const fingerprint = computeFingerprint(repo, relPaths);
+    const cached = loadDiskCache(repo, fingerprint);
+    if (cached) return cached;
+  }
+
   const nodes = new Map<string, SymbolNode>();
   const edges: SymbolEdge[] = [];
   const nameIndex = new Map<string, string[]>();
@@ -55,11 +76,8 @@ export async function indexRepository(options: IndexOptions): Promise<{
   const fileImports = new Map<string, ReturnType<typeof extractNamedImportsTs>>();
   const fileContents = new Map<string, string>();
 
-  const sortedPaths = [...paths].sort((a, b) => a.localeCompare(b));
-
-  for (const abs of sortedPaths) {
-    const rel = relative(repo, abs).replace(/\\/g, "/");
-    if (ig.ignores(rel)) continue;
+  for (const rel of relPaths) {
+    const abs = join(repo, rel);
     let content: string;
     try {
       content = readFileSync(abs, "utf8");
@@ -167,15 +185,22 @@ export async function indexRepository(options: IndexOptions): Promise<{
     }
   }
 
-  return {
-    graph: { nodes, edges },
-    stats: {
-      files: new Set([...nodes.values()].map((n) => n.file)).size,
-      symbols: nodes.size,
-      edges: edges.length,
-    },
+  const stats: IndexStats = {
+    files: new Set([...nodes.values()].map((n) => n.file)).size,
+    symbols: nodes.size,
+    edges: edges.length,
   };
+  const graph = { nodes, edges };
+
+  if (useDiskCache) {
+    const fingerprint = computeFingerprint(repo, relPaths);
+    saveDiskCache(repo, fingerprint, graph, stats);
+  }
+
+  return { graph, stats };
 }
+
+export { clearDiskCache } from "./disk-cache.js";
 
 export function readBundleSnippet(
   repo: string,

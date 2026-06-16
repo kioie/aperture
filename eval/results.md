@@ -2,6 +2,9 @@
 
 Budget: 4000 tokens per case
 
+## sample-repo
+Index: cold 58ms · disk cache 8ms
+
 - [x] Auth — login validation
   task: "fix login validation bug"
   files: src/auth/login.ts, src/api/router.ts, src/payments/stripe.ts, src/auth/session.ts, src/users/profile.ts, src/payments/billing.ts
@@ -57,5 +60,28 @@ Budget: 4000 tokens per case
   files: src/payments/stripe.ts, src/payments/billing.ts, src/payments/index.ts, src/auth/login.ts, src/users/profile.ts, src/api/router.ts, src/auth/session.ts
   tokens: 1145/4000 · top score: 0.160 · recall@4000: 100%
 
-Score: 11/11
+## monorepo
+Index: cold 4ms · disk cache 2ms
+
+- [x] Monorepo — cross-package auth login
+  task: "cross-package login handler in api server"
+  files: packages/auth/src/login.ts, packages/payments/src/stripe.ts, packages/payments/src/billing.ts, packages/auth/src/session.ts, packages/shared/src/validate.ts, apps/api/src/server.ts, packages/auth/src/index.ts, packages/payments/src/index.ts
+  tokens: 716/4000 · top score: 0.117 · recall@4000: 100%
+
+- [x] Monorepo — shared validation package
+  task: "shared email validation utility"
+  files: packages/shared/src/validate.ts, apps/api/src/server.ts, packages/payments/src/billing.ts, packages/payments/src/stripe.ts, packages/auth/src/session.ts, packages/auth/src/login.ts
+  tokens: 644/4000 · top score: 0.409 · recall@4000: 100%
+
+- [x] Monorepo — payments webhook via packages
+  task: "stripe webhook handler in api app"
+  files: packages/payments/src/stripe.ts, apps/api/src/server.ts, packages/payments/src/billing.ts, packages/shared/src/validate.ts, packages/auth/src/session.ts, packages/auth/src/login.ts
+  tokens: 644/4000 · top score: 0.195 · recall@4000: 100%
+
+- [x] Monorepo — billing retry across packages
+  task: "retry failed billing charge invoice"
+  files: packages/payments/src/billing.ts, apps/api/src/server.ts, packages/payments/src/stripe.ts, packages/shared/src/validate.ts, packages/auth/src/session.ts, packages/auth/src/login.ts
+  tokens: 644/4000 · top score: 0.409 · recall@4000: 100%
+
+Score: 15/15
 Mean recall@4000: 100.0%

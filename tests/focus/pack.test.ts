@@ -3,12 +3,14 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as builder from "../../src/index/builder.js";
 import { clearIndexCache, focusContext, warmIndex } from "../../src/focus/pack.js";
+import { clearDiskCache } from "../../src/index/builder.js";
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/sample-repo");
 
 describe("index cache", () => {
   afterEach(() => {
     clearIndexCache();
+    clearDiskCache(repo);
     vi.restoreAllMocks();
   });
 

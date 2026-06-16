@@ -4,7 +4,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { focusContext, warmIndex, readBundleSnippet, indexRepository } from "../index.js";
+import { focusContext, warmIndex, readBundleSnippet } from "../index.js";
 import { getVersion } from "../version.js";
 
 let lastRepo = process.cwd();
@@ -80,8 +80,7 @@ export async function startApertureMcpServer(): Promise<void> {
     if (name === "aperture_index") {
       const repo = String(payload.repo ?? lastRepo);
       lastRepo = repo;
-      await warmIndex(repo);
-      const { stats } = await indexRepository({ repo });
+      const stats = await warmIndex(repo);
       return text({ repo, ...stats, cached: true });
     }
 

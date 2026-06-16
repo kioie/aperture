@@ -1,7 +1,7 @@
 import { buildAdjacencyGraph } from "../core/graph.js";
 import { cohesionPack } from "../core/cohesion-pack.js";
 import { computeResonance, scoreSeeds } from "../core/resonance.js";
-import type { FocusBundle, FocusOptions } from "../core/types.js";
+import type { FocusBundle, FocusOptions, IndexStats } from "../core/types.js";
 import { indexRepository } from "../index/builder.js";
 
 let cached: { repo: string; graph: Awaited<ReturnType<typeof indexRepository>>["graph"] } | null =
@@ -28,9 +28,10 @@ export async function focusContext(options: FocusOptions): Promise<FocusBundle> 
   });
 }
 
-export async function warmIndex(repo: string): Promise<void> {
-  const { graph } = await indexRepository({ repo });
+export async function warmIndex(repo: string): Promise<IndexStats> {
+  const { graph, stats } = await indexRepository({ repo });
   cached = { repo, graph };
+  return stats;
 }
 
 export function clearIndexCache(): void {

@@ -4,7 +4,7 @@
 
 [![npm](https://img.shields.io/npm/v/@kioie/aperture?color=orange)](https://www.npmjs.com/package/@kioie/aperture)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![eval](https://img.shields.io/badge/eval-11%2F11-brightgreen)](#evaluation)
+[![eval](https://img.shields.io/badge/eval-15%2F15-brightgreen)](#evaluation)
 [![MCP](https://img.shields.io/badge/MCP-native-purple)](docs/cursor.md)
 
 ---
@@ -64,7 +64,7 @@ npx @kioie/aperture focus "fix login validation bug" --budget 4000
 ## Quick start
 
 ```bash
-# 1. Index your repo (fast — builds a symbol graph)
+# 1. Index your repo (fast — builds a symbol graph, cached to .aperture-cache/)
 aperture index .
 
 # 2. Get a cited bundle for your task
@@ -136,7 +136,7 @@ Once connected, agents call `aperture_focus` before reading any files.
 Index → Seed → Resonate → Pack → Cite
 ```
 
-1. **Index** — extract symbols (functions, classes, exports) and dependency edges (imports, calls, containment) from TS/JS/Python
+1. **Index** — extract symbols (functions, classes, exports) and dependency edges (imports, calls, containment) from TS/JS/Python; persist to `.aperture-cache/` for fast re-index
 2. **Seed** — score symbols by token overlap between task description and symbol names/paths
 3. **Resonate** — personalized propagation: high-seed symbols push score to their neighbors across the dependency graph
 4. **Pack** — greedy selection by `utility = resonance × cohesion / token_cost`, stopping at budget
@@ -150,20 +150,11 @@ See [SPEC.md](./SPEC.md) for the full algorithm.
 npm run eval
 ```
 
-Current score: **11/11** across auth, payments, users, API integration, and barrel re-export tasks (mean recall@4000: **100%**).
+Current score: **15/15** across sample-repo (auth, payments, users, API, barrels) and monorepo (cross-package imports) fixtures (mean recall@4000: **100%**).
 
 ```
-✓ Auth — login validation
-✓ Auth — session creation
-✓ Payments — webhook handler
-✓ Payments — invoice billing
-✓ Users — profile update validation
-✓ API — router + auth integration
-✓ Payments — webhook signature
-✓ Payments — invoice creation
-✓ Users — profile lookup
-✓ Auth — barrel index re-exports
-✓ Payments — barrel index re-exports
+sample-repo  — 11 cases · cold index ~200ms · disk cache ~7ms
+monorepo     —  4 cases · cold index ~620ms · disk cache ~70ms
 ```
 
 See [eval/results.md](./eval/results.md) for the full report.
