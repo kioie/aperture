@@ -6,8 +6,34 @@ export interface AdjacencyGraph {
   in: Map<string, Array<{ from: string; weight: number }>>;
 }
 
+function compareEdges(
+  a: { to?: string; from?: string; weight: number },
+  b: { to?: string; from?: string; weight: number },
+): number {
+  const aKey = a.to ?? a.from ?? "";
+  const bKey = b.to ?? b.from ?? "";
+  const cmp = aKey.localeCompare(bKey);
+  if (cmp !== 0) return cmp;
+  return a.weight - b.weight;
+}
+
+export function canonicalizeGraph(g: CodeGraph): CodeGraph {
+  const nodes = new Map([...g.nodes.entries()].sort((a, b) => a[0].localeCompare(b[0])));
+  const edges = [...g.edges].sort((a, b) => {
+    const from = a.from.localeCompare(b.from);
+    if (from !== 0) return from;
+    const to = a.to.localeCompare(b.to);
+    if (to !== 0) return to;
+    const kind = a.kind.localeCompare(b.kind);
+    if (kind !== 0) return kind;
+    return a.weight - b.weight;
+  });
+  return { nodes, edges };
+}
+
 export function buildAdjacencyGraph(g: CodeGraph): AdjacencyGraph {
-  const nodes = [...g.nodes.keys()];
+  const canonical = canonicalizeGraph(g);
+  const nodes = [...canonical.nodes.keys()];
   const out = new Map<string, Array<{ to: string; weight: number }>>();
   const inn = new Map<string, Array<{ from: string; weight: number }>>();
 
@@ -15,9 +41,13 @@ export function buildAdjacencyGraph(g: CodeGraph): AdjacencyGraph {
     out.set(id, []);
     inn.set(id, []);
   }
-  for (const e of g.edges) {
+  for (const e of canonical.edges) {
     out.get(e.from)?.push({ to: e.to, weight: e.weight });
     inn.get(e.to)?.push({ from: e.from, weight: e.weight });
+  }
+  for (const id of nodes) {
+    out.get(id)?.sort(compareEdges);
+    inn.get(id)?.sort(compareEdges);
   }
   return { nodes, out, in: inn };
 }

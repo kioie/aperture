@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { CodeGraph, IndexStats, SymbolEdge, SymbolNode } from "../core/types.js";
 
@@ -24,8 +24,10 @@ export function computeFingerprint(repo: string, relPaths: string[]): string {
   for (const rel of [...relPaths].sort((a, b) => a.localeCompare(b))) {
     const abs = join(repo, rel);
     try {
-      const st = statSync(abs);
-      hash.update(`${rel}\0${st.mtimeMs}\0${st.size}\n`);
+      const content = readFileSync(abs);
+      hash.update(`${rel}\0${content.length}\0`);
+      hash.update(content);
+      hash.update("\n");
     } catch {
       hash.update(`${rel}\0missing\n`);
     }

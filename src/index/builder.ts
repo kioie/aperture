@@ -15,6 +15,7 @@ import {
   type ExportLocation,
 } from "./extract.js";
 import type { CodeGraph, IndexStats, SymbolEdge, SymbolNode } from "../core/types.js";
+import { canonicalizeGraph } from "../core/graph.js";
 import {
   clearDiskCache,
   computeFingerprint,
@@ -66,7 +67,12 @@ export async function indexRepository(options: IndexOptions): Promise<{
   if (useDiskCache) {
     const fingerprint = computeFingerprint(repo, relPaths);
     const cached = loadDiskCache(repo, fingerprint);
-    if (cached) return cached;
+    if (cached) {
+      return {
+        graph: canonicalizeGraph(cached.graph),
+        stats: cached.stats,
+      };
+    }
   }
 
   const nodes = new Map<string, SymbolNode>();
@@ -190,7 +196,7 @@ export async function indexRepository(options: IndexOptions): Promise<{
     symbols: nodes.size,
     edges: edges.length,
   };
-  const graph = { nodes, edges };
+  const graph = canonicalizeGraph({ nodes, edges });
 
   if (useDiskCache) {
     const fingerprint = computeFingerprint(repo, relPaths);

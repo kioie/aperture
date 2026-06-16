@@ -18,7 +18,9 @@ export function cohesionPack(input: PackInput): FocusBundle {
   const reasons = new Map<string, string>();
   const taskTokens = tokenizeTask(task);
 
-  for (const [id, s] of [...seeds.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)) {
+  for (const [id, s] of [...seeds.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 8)) {
     selected.add(id);
     reasons.set(id, seedReason(id, nodes, taskTokens, s));
   }
@@ -37,7 +39,9 @@ export function cohesionPack(input: PackInput): FocusBundle {
       if (attachment <= 0 && selected.size > 0) continue;
       const rank = ranks.get(id) ?? 0;
       const utility = (rank * attachment) / Math.max(1, cost);
-      if (!best || utility > best.utility) best = { id, utility };
+      if (!best || utility > best.utility || (utility === best.utility && id.localeCompare(best.id) < 0)) {
+        best = { id, utility };
+      }
     }
     if (!best || best.utility <= 0) break;
     selected.add(best.id);
@@ -134,5 +138,5 @@ function collapseToFiles(
     file.ranges.push({ start: node.startLine, end: node.endLine });
     file.reasons.push(reasons.get(id) ?? "");
   }
-  return [...byFile.values()].sort((a, b) => b.score - a.score);
+  return [...byFile.values()].sort((a, b) => b.score - a.score || a.path.localeCompare(b.path));
 }
