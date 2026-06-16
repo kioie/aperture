@@ -80,6 +80,7 @@ program
     const candidates = [
       join(__dirname, "../../tests/fixtures/sample-repo"),
       join(__dirname, "../../../tests/fixtures/sample-repo"),
+      join(__dirname, "../../../../tests/fixtures/sample-repo"),
     ];
     const { existsSync } = await import("node:fs");
     const repo = candidates.find((p) => existsSync(p)) ?? (candidates[0] as string);
@@ -135,7 +136,7 @@ program
       JSON.stringify(
         {
           mcpServers: {
-            aperture: { command: "npx", args: ["-y", "aperture", "mcp"] },
+            aperture: { command: "npx", args: ["-y", "@kioie/aperture", "mcp"] },
           },
         },
         null,

@@ -46,7 +46,9 @@ export async function indexRepository(options: IndexOptions): Promise<{
   const edges: SymbolEdge[] = [];
   const nameIndex = new Map<string, string[]>();
 
-  for (const abs of paths) {
+  const sortedPaths = [...paths].sort((a, b) => a.localeCompare(b));
+
+  for (const abs of sortedPaths) {
     const rel = relative(repo, abs).replace(/\\/g, "/");
     if (ig.ignores(rel)) continue;
     let content: string;

@@ -2,8 +2,6 @@
 
 Thanks for your interest! Aperture is a small, focused tool — contributions that keep it sharp are most welcome.
 
-**If Aperture is useful to you, the fastest way to help is a GitHub star.** It helps more developers and agent builders discover the project.
-
 ---
 
 ## What we're looking for

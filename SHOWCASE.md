@@ -1,6 +1,6 @@
-# Aperture Showcase
+# Aperture examples
 
-Real terminal output. Real codebases. No magic.
+Sample CLI and MCP output from the built-in fixture repo.
 
 ---
 
@@ -150,7 +150,7 @@ Use in GitHub Actions to give your code-review bot scoped context. See [integrat
 ## 7. Library usage in an agent loop
 
 ```typescript
-import { focusContext } from "aperture";
+import { focusContext } from "@kioie/aperture";
 
 async function agentLoop(task: string, repo: string) {
   // Step 1: Get cited bundle — replaces recursive file reads

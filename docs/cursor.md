@@ -7,7 +7,7 @@
   "mcpServers": {
     "aperture": {
       "command": "npx",
-      "args": ["-y", "aperture", "mcp"]
+      "args": ["-y", "@kioie/aperture", "mcp"]
     }
   }
 }

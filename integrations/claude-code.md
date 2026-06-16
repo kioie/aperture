@@ -3,7 +3,7 @@
 ## Install
 
 ```bash
-claude mcp add aperture -- npx -y aperture mcp
+claude mcp add aperture -- npx -y @kioie/aperture mcp
 ```
 
 Or globally:

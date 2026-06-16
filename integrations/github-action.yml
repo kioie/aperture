@@ -23,7 +23,7 @@ jobs:
           node-version: '20'
 
       - name: Index repository
-        run: npx -y aperture index .
+        run: npx -y @kioie/aperture index .
 
       - name: Get PR description
         id: pr
@@ -37,7 +37,7 @@ jobs:
       - name: Build context bundle
         id: bundle
         run: |
-          BUNDLE=$(npx aperture focus "${{ steps.pr.outputs.task }}" --budget 6000 --format json)
+          BUNDLE=$(npx @kioie/aperture focus "${{ steps.pr.outputs.task }}" --budget 6000 --format json)
           echo "bundle<<EOF" >> $GITHUB_OUTPUT
           echo "$BUNDLE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -45,7 +45,7 @@ jobs:
       - name: Format bundle as markdown
         id: markdown
         run: |
-          MARKDOWN=$(npx aperture focus "${{ steps.pr.outputs.task }}" --budget 6000 --format markdown)
+          MARKDOWN=$(npx @kioie/aperture focus "${{ steps.pr.outputs.task }}" --budget 6000 --format markdown)
           echo "markdown<<EOF" >> $GITHUB_OUTPUT
           echo "$MARKDOWN" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT

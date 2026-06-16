@@ -2,7 +2,7 @@
 
 **Open only the code your agent needs.**
 
-[![npm](https://img.shields.io/npm/v/aperture?color=orange)](https://www.npmjs.com/package/aperture)
+[![npm](https://img.shields.io/npm/v/@kioie/aperture?color=orange)](https://www.npmjs.com/package/@kioie/aperture)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![eval](https://img.shields.io/badge/eval-6%2F6-brightgreen)](#evaluation)
 [![MCP](https://img.shields.io/badge/MCP-native-purple)](docs/cursor.md)
@@ -51,14 +51,14 @@ Symbols: 12/21 · 443 tok / 4000 budget
 ## Install
 
 ```bash
-npm install -g aperture
+npm install -g @kioie/aperture
 aperture doctor
 ```
 
 Or zero-install with npx:
 
 ```bash
-npx aperture focus "fix login validation bug" --budget 4000
+npx @kioie/aperture focus "fix login validation bug" --budget 4000
 ```
 
 ## Quick start
@@ -90,7 +90,7 @@ aperture cursor
 
 **Claude Code:**
 ```bash
-claude mcp add aperture -- npx -y aperture mcp
+claude mcp add aperture -- npx -y @kioie/aperture mcp
 ```
 
 **Any MCP client (Cursor, Claude Code, Codex, Zed...):**
@@ -99,7 +99,7 @@ claude mcp add aperture -- npx -y aperture mcp
   "mcpServers": {
     "aperture": {
       "command": "npx",
-      "args": ["-y", "aperture", "mcp"]
+      "args": ["-y", "@kioie/aperture", "mcp"]
     }
   }
 }
@@ -173,7 +173,7 @@ Runs Aperture on the built-in sample repo (auth + payments + users + API) and pr
 ## Library API
 
 ```typescript
-import { focusContext } from "aperture";
+import { focusContext } from "@kioie/aperture";
 
 const bundle = await focusContext({
   repo: "/path/to/repo",
@@ -195,6 +195,6 @@ const bundle = await focusContext({
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). Stars help more devs find Aperture — if it's useful, give it one.
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 MIT License.

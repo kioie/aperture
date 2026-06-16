@@ -37,7 +37,7 @@ Or add manually:
   "mcpServers": {
     "aperture": {
       "command": "npx",
-      "args": ["-y", "aperture", "mcp"]
+      "args": ["-y", "@kioie/aperture", "mcp"]
     }
   }
 }
@@ -45,7 +45,7 @@ Or add manually:
 
 ### Claude Code
 ```bash
-claude mcp add aperture -- npx -y aperture mcp
+claude mcp add aperture -- npx -y @kioie/aperture mcp
 ```
 
 ### Any MCP client
@@ -54,7 +54,7 @@ claude mcp add aperture -- npx -y aperture mcp
   "mcpServers": {
     "aperture": {
       "command": "npx",
-      "args": ["-y", "aperture", "mcp"]
+      "args": ["-y", "@kioie/aperture", "mcp"]
     }
   }
 }

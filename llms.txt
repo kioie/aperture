@@ -21,12 +21,12 @@ Aperture solves the over-reading problem: agents typically read 30–50 files be
 
 ```bash
 npm install -g aperture
-npx aperture doctor
+npx @kioie/aperture doctor
 ```
 
 Zero-install:
 ```bash
-npx aperture focus "fix login validation bug" --budget 4000
+npx @kioie/aperture focus "fix login validation bug" --budget 4000
 ```
 
 ## MCP setup (Cursor, Claude Code, Codex, Zed)
@@ -36,13 +36,13 @@ npx aperture focus "fix login validation bug" --budget 4000
   "mcpServers": {
     "aperture": {
       "command": "npx",
-      "args": ["-y", "aperture", "mcp"]
+      "args": ["-y", "@kioie/aperture", "mcp"]
     }
   }
 }
 ```
 
-Or: `aperture cursor` prints the snippet. `claude mcp add aperture -- npx -y aperture mcp`
+Or: `aperture cursor` prints the snippet. `claude mcp add aperture -- npx -y @kioie/aperture mcp`
 
 ## Recommended agent loop
 
@@ -206,7 +206,7 @@ aperture mcp                    # Start MCP server (stdio)
 ## Library API
 
 ```typescript
-import { focusContext } from "aperture";
+import { focusContext } from "@kioie/aperture";
 
 const bundle = await focusContext({
   repo: "/path/to/repo",
