@@ -1,8 +1,9 @@
 import type { SymbolEdge, SymbolNode } from "../core/types.js";
 
 const FN_TS =
-  /^(export\s+)?(async\s+)?function\s+(\w+)|^(export\s+)?const\s+(\w+)\s*=\s*(async\s+)?\(/gm;
+  /^(export\s+)?(async\s+)?function\s+(\w+)|^(export\s+)?const\s+(\w+)\s*=\s*(async\s+)?\(|^(export\s+)?const\s+(\w+)\s*=\s*(async\s+)?[^=]*=>/gm;
 const CLASS_TS = /^(export\s+)?class\s+(\w+)/gm;
+const METHOD_LINE = /^\s+(?:(?:public|private|protected|static|async)\s+)*(\w+)\s*\(/;
 const IMPORT_TS = /import\s+.*?from\s+['"]([^'"]+)['"]/g;
 const CALL_TS = /\b([A-Za-z_]\w*)\s*\(/g;
 
@@ -19,7 +20,7 @@ export function extractTypeScriptSymbols(
 
   FN_TS.lastIndex = 0;
   while ((match = FN_TS.exec(content)) !== null) {
-    const name = match[3] ?? match[5];
+    const name = match[3] ?? match[5] ?? match[7];
     if (!name) continue;
     const startLine = content.slice(0, match.index).split("\n").length;
     const endLine = findBlockEnd(lines, startLine);
@@ -33,6 +34,17 @@ export function extractTypeScriptSymbols(
     const startLine = content.slice(0, match.index).split("\n").length;
     const endLine = findBlockEnd(lines, startLine);
     nodes.push(makeNode(file, name, "class", startLine, endLine, lines));
+
+    for (let lineNum = startLine + 1; lineNum < endLine; lineNum++) {
+      const line = lines[lineNum - 1] ?? "";
+      const methodMatch = line.match(METHOD_LINE);
+      if (!methodMatch?.[1]) continue;
+      const methodName = methodMatch[1];
+      if (["constructor", "if", "for", "while", "switch"].includes(methodName)) continue;
+      const qualified = `${name}.${methodName}`;
+      const methodEnd = findBlockEnd(lines, lineNum);
+      nodes.push(makeNode(file, qualified, "method", lineNum, methodEnd, lines));
+    }
   }
 
   if (nodes.length === 0) {
@@ -83,6 +95,77 @@ export function extractImportsTs(content: string): string[] {
     if (m[1]) out.push(m[1]);
   }
   return out;
+}
+
+export interface NamedImport {
+  spec: string;
+  names: string[];
+}
+
+/** Parse TS import declarations into module spec + imported symbol names. */
+export function extractNamedImportsTs(content: string): NamedImport[] {
+  const out: NamedImport[] = [];
+  const patterns = [
+    /import\s+(?:type\s+)?\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/g,
+    /import\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g,
+    /import\s+\*\s+as\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g,
+  ];
+
+  for (const re of patterns) {
+    let m: RegExpExecArray | null;
+    re.lastIndex = 0;
+    while ((m = re.exec(content)) !== null) {
+      if (re === patterns[0]) {
+        const names = (m[1] ?? "")
+          .split(",")
+          .map((part) => part.trim().split(/\s+as\s+/)[0]?.trim())
+          .filter((n): n is string => Boolean(n));
+        if (m[2] && names.length) out.push({ spec: m[2], names });
+      } else if (m[1] && m[2]) {
+        out.push({ spec: m[2], names: [m[1]] });
+      }
+    }
+  }
+
+  return out;
+}
+
+/** Resolve a relative import spec to a repo-relative file path, or null. */
+export function resolveImportPath(
+  fromFile: string,
+  spec: string,
+  knownFiles: ReadonlySet<string>,
+): string | null {
+  if (!spec.startsWith(".")) return null;
+  const dir = fromFile.includes("/") ? fromFile.slice(0, fromFile.lastIndexOf("/")) : "";
+  const joined = normalizePath(dir ? `${dir}/${spec}` : spec);
+  const base = joined.replace(/\.(tsx?|jsx?|mjs|cjs)$/, "");
+  const candidates = [
+    joined,
+    base,
+    `${base}.ts`,
+    `${base}.tsx`,
+    `${base}.js`,
+    `${base}.jsx`,
+    `${base}.mjs`,
+    `${base}/index.ts`,
+    `${base}/index.js`,
+  ];
+  for (const c of candidates) {
+    if (knownFiles.has(c)) return c;
+  }
+  return null;
+}
+
+function normalizePath(p: string): string {
+  const parts = p.split("/");
+  const out: string[] = [];
+  for (const part of parts) {
+    if (part === "" || part === ".") continue;
+    if (part === "..") out.pop();
+    else out.push(part);
+  }
+  return out.join("/");
 }
 
 function makeNode(

@@ -1,6 +1,6 @@
 {
   "name": "@kioie/aperture",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Budget-aware code context bundles for coding agents — graph resonance selection with citations, MCP-native.",
   "type": "module",
   "license": "MIT",
@@ -8,7 +8,7 @@
     "node": ">=20"
   },
   "bin": {
-    "aperture": "./dist/cli/bin.js"
+    "aperture": "dist/cli/bin.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

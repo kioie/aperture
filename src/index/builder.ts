@@ -5,8 +5,10 @@ import ignore from "ignore";
 import {
   buildContainmentEdges,
   extractCalls,
+  extractNamedImportsTs,
   extractPythonSymbols,
   extractTypeScriptSymbols,
+  resolveImportPath,
 } from "./extract.js";
 import type { CodeGraph, IndexStats, SymbolEdge, SymbolNode } from "../core/types.js";
 
@@ -45,6 +47,9 @@ export async function indexRepository(options: IndexOptions): Promise<{
   const nodes = new Map<string, SymbolNode>();
   const edges: SymbolEdge[] = [];
   const nameIndex = new Map<string, string[]>();
+  const fileSymbols = new Map<string, SymbolNode[]>();
+  const fileImports = new Map<string, ReturnType<typeof extractNamedImportsTs>>();
+  const fileContents = new Map<string, string>();
 
   const sortedPaths = [...paths].sort((a, b) => a.localeCompare(b));
 
@@ -63,6 +68,12 @@ export async function indexRepository(options: IndexOptions): Promise<{
         ? extractPythonSymbols(rel, content)
         : extractTypeScriptSymbols(rel, content);
 
+    fileSymbols.set(rel, symbols);
+    fileContents.set(rel, content);
+    if (!abs.endsWith(".py")) {
+      fileImports.set(rel, extractNamedImportsTs(content));
+    }
+
     for (const s of symbols) {
       nodes.set(s.id, s);
       const list = nameIndex.get(s.name) ?? [];
@@ -79,6 +90,26 @@ export async function indexRepository(options: IndexOptions): Promise<{
         for (const tgt of targets) {
           if (src.id === tgt) continue;
           edges.push({ from: src.id, to: tgt, kind: "call", weight: 1 });
+        }
+      }
+    }
+  }
+
+  const knownFiles = new Set(fileSymbols.keys());
+  for (const [fromFile, imports] of [...fileImports.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    const srcSymbols = fileSymbols.get(fromFile) ?? [];
+    const content = fileContents.get(fromFile) ?? "";
+    for (const { spec, names } of imports) {
+      const targetFile = resolveImportPath(fromFile, spec, knownFiles);
+      if (!targetFile) continue;
+      const tgtSymbols = fileSymbols.get(targetFile) ?? [];
+      const targets = tgtSymbols.filter((t) => names.includes(t.name.split(".").pop() ?? t.name));
+      for (const src of srcSymbols) {
+        const body = symbolBody(content, src);
+        for (const tgt of targets) {
+          const ref = tgt.name.split(".").pop() ?? tgt.name;
+          if (src.id === tgt.id || !body.includes(ref)) continue;
+          edges.push({ from: src.id, to: tgt.id, kind: "import", weight: 0.5 });
         }
       }
     }
@@ -105,4 +136,8 @@ export function readBundleSnippet(
     chunks.push(lines.slice(r.start - 1, r.end).join("\n"));
   }
   return chunks.join("\n\n// ---\n\n");
+}
+
+function symbolBody(content: string, node: SymbolNode): string {
+  return content.split("\n").slice(node.startLine - 1, node.endLine).join("\n");
 }

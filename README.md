@@ -149,7 +149,7 @@ See [SPEC.md](./SPEC.md) for the full algorithm.
 npm run eval
 ```
 
-Current score: **7/7** across auth, payments, user, and API integration tasks.
+Current score: **7/7** across auth, payments, user, and API integration tasks (mean recall@4000: **100%**).
 
 ```
 ✓ Auth — login validation
@@ -162,6 +162,8 @@ Current score: **7/7** across auth, payments, user, and API integration tasks.
 ```
 
 See [eval/results.md](./eval/results.md) for the full report.
+
+Reproducible examples with exact token counts: [EXAMPLES.md](./EXAMPLES.md).
 
 ## Demo
 

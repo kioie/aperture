@@ -11,7 +11,7 @@ let lastBundle: Awaited<ReturnType<typeof focusContext>> | null = null;
 
 export async function startApertureMcpServer(): Promise<void> {
   const server = new Server(
-    { name: "aperture", version: "0.1.0" },
+    { name: "aperture", version: "0.1.1" },
     { capabilities: { tools: {} } },
   );
 
@@ -64,7 +64,30 @@ export async function startApertureMcpServer(): Promise<void> {
 
     if (name === "aperture_explain") {
       if (!lastBundle) return text({ error: "No bundle yet — call aperture_focus first" });
-      return text({ explain: lastBundle.explain, files: lastBundle.files });
+      const symbols = lastBundle.explain.map((entry) => {
+        const [id, ...rest] = entry.split(": ");
+        const reason = rest.join(": ");
+        const node = id?.includes("::") ? id.split("::") : [null, id];
+        return {
+          id,
+          file: node[0] ?? null,
+          name: node[1] ?? id,
+          reason,
+        };
+      });
+      return text({
+        task: lastBundle.task,
+        budget: lastBundle.budget,
+        tokens: lastBundle.tokens,
+        symbols,
+        files: lastBundle.files.map((f) => ({
+          path: f.path,
+          score: f.score,
+          tokens: f.tokens,
+          ranges: f.ranges,
+          reasons: f.reasons,
+        })),
+      });
     }
 
     if (name === "aperture_read_bundle") {

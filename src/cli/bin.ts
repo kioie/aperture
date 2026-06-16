@@ -8,7 +8,7 @@ import { readBundleSnippet } from "../index/builder.js";
 
 const program = new Command();
 
-program.name("aperture").description("Budget-aware code context bundles for agents").version("0.1.0");
+program.name("aperture").description("Budget-aware code context bundles for agents").version("0.1.1");
 
 program
   .command("focus")
@@ -17,7 +17,8 @@ program
   .option("-r, --repo <path>", "Repository root", process.cwd())
   .option("-b, --budget <n>", "Token budget", "4000")
   .option("-f, --format <fmt>", "plain | json | markdown", "plain")
-  .action(async (taskParts: string[], opts: { repo: string; budget: string; format: string }) => {
+  .option("--json", "Output JSON (alias for --format json)")
+  .action(async (taskParts: string[], opts: { repo: string; budget: string; format: string; json?: boolean }) => {
     const task = taskParts.join(" ");
     const bundle = await focusContext({
       repo: opts.repo,
@@ -25,12 +26,14 @@ program
       budget: Number(opts.budget),
     });
 
-    if (opts.format === "json") {
+    const format = opts.json ? "json" : opts.format;
+
+    if (format === "json") {
       console.log(JSON.stringify(bundle, null, 2));
       return;
     }
 
-    if (opts.format === "markdown") {
+    if (format === "markdown") {
       console.log(renderMarkdown(opts.repo, bundle));
       return;
     }
@@ -40,6 +43,11 @@ program
     for (const f of bundle.files) {
       const ranges = f.ranges.map((r) => `${r.start}-${r.end}`).join(", ");
       console.log(`  ${f.path}  score=${f.score.toFixed(3)}  ${f.tokens} tok  lines ${ranges}`);
+      if (f.reasons?.length) {
+        for (const r of f.reasons.slice(0, 2)) {
+          console.log(`    ↳ ${r}`);
+        }
+      }
     }
   });
 
@@ -55,9 +63,33 @@ program
 program
   .command("doctor")
   .description("Environment self-check")
-  .action(() => {
-    const ok = /^v(2[0-9]|[3-9][0-9])/.test(process.version);
-    console.log(ok ? "✓ Node.js >= 20" : "✗ Node.js 20+ required");
+  .option("-r, --repo <path>", "Optional repo to verify indexing", "")
+  .action(async (opts: { repo: string }) => {
+    let ok = true;
+    const line = (pass: boolean, msg: string) => {
+      console.log(pass ? `✓ ${msg}` : `✗ ${msg}`);
+      if (!pass) ok = false;
+    };
+
+    line(/^v(2[0-9]|[3-9][0-9])/.test(process.version), `Node.js ${process.version} (>= 20 required)`);
+
+    try {
+      const { focusContext } = await import("../index.js");
+      line(typeof focusContext === "function", "Aperture module loads");
+    } catch (e) {
+      line(false, `Aperture module loads (${e instanceof Error ? e.message : "error"})`);
+    }
+
+    if (opts.repo) {
+      try {
+        const { indexRepository } = await import("../index.js");
+        const { stats } = await indexRepository({ repo: opts.repo });
+        line(stats.symbols > 0, `Index ${opts.repo}: ${stats.files} files, ${stats.symbols} symbols, ${stats.edges} edges`);
+      } catch (e) {
+        line(false, `Index ${opts.repo} (${e instanceof Error ? e.message : "error"})`);
+      }
+    }
+
     process.exit(ok ? 0 : 1);
   });
 

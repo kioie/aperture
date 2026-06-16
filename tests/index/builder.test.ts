@@ -12,6 +12,13 @@ describe("indexRepository", () => {
     const b = await indexRepository({ repo });
     expect(a.stats).toEqual(b.stats);
   });
+
+  it("builds import edges between modules", async () => {
+    const { graph } = await indexRepository({ repo });
+    const importEdges = graph.edges.filter((e) => e.kind === "import");
+    expect(importEdges.length).toBeGreaterThan(0);
+    expect(importEdges.some((e) => e.to.includes("login") || e.to.includes("stripe"))).toBe(true);
+  });
 });
 
 describe("focusContext determinism", () => {
