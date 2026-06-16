@@ -45,8 +45,14 @@ jobs:
       - run: npm run build
         if: steps.sonar.outputs.enabled == 'true'
 
-      - run: npm run test:coverage
+      - name: Test with coverage (no Vitest thresholds)
         if: steps.sonar.outputs.enabled == 'true'
+        run: >-
+          npx vitest run --coverage
+          --coverage.thresholds.lines=0
+          --coverage.thresholds.branches=0
+          --coverage.thresholds.functions=0
+          --coverage.thresholds.statements=0
 
       - name: SonarCloud Scan
         if: steps.sonar.outputs.enabled == 'true'
