@@ -3,7 +3,7 @@
 Budget: 4000 tokens per case
 
 ## sample-repo
-Index: cold 37ms · disk cache 3ms
+Index: cold 305ms · disk cache 13ms
 
 - [x] Auth — login validation
   task: "fix login validation bug"
@@ -61,7 +61,7 @@ Index: cold 37ms · disk cache 3ms
   tokens: 1145/4000 · top score: 0.160 · recall@4000: 100%
 
 ## monorepo
-Index: cold 3ms · disk cache 2ms
+Index: cold 21ms · disk cache 3ms
 
 - [x] Monorepo — cross-package auth login
   task: "cross-package login handler in api server"

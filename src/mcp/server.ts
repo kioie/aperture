@@ -4,10 +4,11 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { resolveRepoRoot } from "../core/paths.js";
 import { focusContext, warmIndex, readBundleSnippet } from "../index.js";
 import { getVersion } from "../version.js";
 
-let lastRepo = process.cwd();
+let lastRepo = resolveRepoRoot(process.cwd());
 let lastBundle: Awaited<ReturnType<typeof focusContext>> | null = null;
 
 export async function startApertureMcpServer(): Promise<void> {
@@ -65,74 +66,79 @@ export async function startApertureMcpServer(): Promise<void> {
     const { name, arguments: args } = req.params;
     const payload = (args ?? {}) as Record<string, unknown>;
 
-    if (name === "aperture_focus") {
-      const task = String(payload.task ?? "");
-      if (!task.trim()) {
-        return text({ error: "task is required — describe what the agent is trying to accomplish" });
+    try {
+      if (name === "aperture_focus") {
+        const task = String(payload.task ?? "");
+        if (!task.trim()) {
+          return text({ error: "task is required — describe what the agent is trying to accomplish" });
+        }
+        const repo = resolveRepoRoot(String(payload.repo ?? lastRepo));
+        lastRepo = repo;
+        const budget = Number(payload.budget ?? 4000);
+        lastBundle = await focusContext({ task, repo, budget });
+        return text(lastBundle);
       }
-      const repo = String(payload.repo ?? lastRepo);
-      lastRepo = repo;
-      const budget = Number(payload.budget ?? 4000);
-      lastBundle = await focusContext({ task, repo, budget });
-      return text(lastBundle);
-    }
 
-    if (name === "aperture_index") {
-      const repo = String(payload.repo ?? lastRepo);
-      lastRepo = repo;
-      const stats = await warmIndex(repo);
-      return text({ repo, ...stats, cached: true });
-    }
+      if (name === "aperture_index") {
+        const repo = resolveRepoRoot(String(payload.repo ?? lastRepo));
+        lastRepo = repo;
+        const stats = await warmIndex(repo);
+        return text({ repo, ...stats, cached: true });
+      }
 
-    if (name === "aperture_explain") {
-      if (!lastBundle) return text({ error: "No bundle yet — call aperture_focus first" });
-      const symbols = lastBundle.explain.map((entry) => {
-        const [id, ...rest] = entry.split(": ");
-        const reason = rest.join(": ");
-        const node = id?.includes("::") ? id.split("::") : [null, id];
-        return {
-          id,
-          file: node[0] ?? null,
-          name: node[1] ?? id,
-          reason,
-        };
-      });
-      return text({
-        task: lastBundle.task,
-        budget: lastBundle.budget,
-        tokens: lastBundle.tokens,
-        symbols,
-        files: lastBundle.files.map((f) => ({
-          path: f.path,
-          score: f.score,
-          tokens: f.tokens,
-          ranges: f.ranges,
-          reasons: f.reasons,
-        })),
-      });
-    }
-
-    if (name === "aperture_read_bundle") {
-      if (!lastBundle) return text({ error: "No bundle yet — call aperture_focus first" });
-      const maxTokens = payload.maxTokens ? Number(payload.maxTokens) : undefined;
-      let used = 0;
-      const sections = [];
-      for (const f of lastBundle.files) {
-        const content = readBundleSnippet(lastRepo, f);
-        const tokens = Math.ceil(content.length / 4);
-        if (maxTokens !== undefined && used + tokens > maxTokens) break;
-        used += tokens;
-        sections.push({
-          path: f.path,
-          citation: f.ranges.map((r) => `${f.path}:${r.start}-${r.end}`).join(", "),
-          content,
-          tokens,
+      if (name === "aperture_explain") {
+        if (!lastBundle) return text({ error: "No bundle yet — call aperture_focus first" });
+        const symbols = lastBundle.explain.map((entry) => {
+          const [id, ...rest] = entry.split(": ");
+          const reason = rest.join(": ");
+          const node = id?.includes("::") ? id.split("::") : [null, id];
+          return {
+            id,
+            file: node[0] ?? null,
+            name: node[1] ?? id,
+            reason,
+          };
+        });
+        return text({
+          task: lastBundle.task,
+          budget: lastBundle.budget,
+          tokens: lastBundle.tokens,
+          symbols,
+          files: lastBundle.files.map((f) => ({
+            path: f.path,
+            score: f.score,
+            tokens: f.tokens,
+            ranges: f.ranges,
+            reasons: f.reasons,
+          })),
         });
       }
-      return text({ sections, tokens: used });
-    }
 
-    throw new Error(`Unknown tool: ${name}`);
+      if (name === "aperture_read_bundle") {
+        if (!lastBundle) return text({ error: "No bundle yet — call aperture_focus first" });
+        const maxTokens = payload.maxTokens ? Number(payload.maxTokens) : undefined;
+        let used = 0;
+        const sections = [];
+        for (const f of lastBundle.files) {
+          const content = readBundleSnippet(lastRepo, f);
+          const tokens = Math.ceil(content.length / 4);
+          if (maxTokens !== undefined && used + tokens > maxTokens) break;
+          used += tokens;
+          sections.push({
+            path: f.path,
+            citation: f.ranges.map((r) => `${f.path}:${r.start}-${r.end}`).join(", "),
+            content,
+            tokens,
+          });
+        }
+        return text({ sections, tokens: used });
+      }
+
+      throw new Error(`Unknown tool: ${name}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return text({ error: message });
+    }
   });
 
   await server.connect(new StdioServerTransport());

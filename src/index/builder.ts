@@ -16,6 +16,7 @@ import {
 } from "./extract.js";
 import type { CodeGraph, IndexStats, SymbolEdge, SymbolNode } from "../core/types.js";
 import { canonicalizeGraph } from "../core/graph.js";
+import { resolvePathWithinRepo, resolveRepoRoot } from "../core/paths.js";
 import {
   clearDiskCache,
   computeFingerprint,
@@ -43,7 +44,8 @@ export async function indexRepository(options: IndexOptions): Promise<{
   graph: CodeGraph;
   stats: IndexStats;
 }> {
-  const { repo, include, exclude, useDiskCache = true } = options;
+  const repo = resolveRepoRoot(options.repo);
+  const { include, exclude, useDiskCache = true } = options;
   const patterns = include?.length
     ? include
     : ["**/*.{ts,tsx,js,jsx,mjs,cjs,py}"];
@@ -212,7 +214,8 @@ export function readBundleSnippet(
   repo: string,
   file: { path: string; ranges: Array<{ start: number; end: number }> },
 ): string {
-  const content = readFileSync(join(repo, file.path), "utf8");
+  const root = resolveRepoRoot(repo);
+  const content = readFileSync(resolvePathWithinRepo(root, file.path), "utf8");
   const lines = content.split("\n");
   const chunks: string[] = [];
   for (const r of file.ranges) {
