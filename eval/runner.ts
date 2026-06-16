@@ -64,6 +64,11 @@ const cases: Case[] = [
     expectPathIncludes: ["login", "index"],
     description: "Auth — barrel index re-exports",
   },
+  {
+    task: "payments barrel re-export stripe billing",
+    expectPathIncludes: ["stripe", "index"],
+    description: "Payments — barrel index re-exports",
+  },
 ];
 
 let hits = 0;

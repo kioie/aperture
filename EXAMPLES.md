@@ -48,7 +48,7 @@ npm install
 npm run eval
 ```
 
-Expected: **9/9** cases pass, mean recall@4000 **100%**.
+Expected: **11/11** cases pass, mean recall@4000 **100%**.
 
 | Case | Tokens | Top file |
 |------|--------|----------|

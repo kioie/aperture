@@ -117,4 +117,37 @@ describe("buildFileExportMap", () => {
     );
     expect(map.get("login")).toEqual({ file: "src/auth/login.ts", symbolName: "login" });
   });
+
+  it("reuses cached export maps for the same file", () => {
+    const loginSrc = "export function login() {}\n";
+    const barrelSrc = 'export { login } from "./login.js";';
+    const fileSymbols = new Map([
+      ["src/auth/login.ts", extractTypeScriptSymbols("src/auth/login.ts", loginSrc)],
+      ["src/auth/index.ts", extractTypeScriptSymbols("src/auth/index.ts", barrelSrc)],
+    ]);
+    const fileContents = new Map([
+      ["src/auth/login.ts", loginSrc],
+      ["src/auth/index.ts", barrelSrc],
+    ]);
+    const known = new Set(["src/auth/login.ts", "src/auth/index.ts"]);
+    const cache = new Map();
+
+    const first = buildFileExportMap(
+      "src/auth/index.ts",
+      fileSymbols,
+      fileContents,
+      known,
+      cache,
+    );
+    const second = buildFileExportMap(
+      "src/auth/index.ts",
+      fileSymbols,
+      fileContents,
+      known,
+      cache,
+    );
+
+    expect(second).toBe(first);
+    expect(cache.size).toBe(2);
+  });
 });

@@ -52,5 +52,10 @@ Budget: 4000 tokens per case
   files: src/auth/login.ts, src/api/router.ts, src/auth/session.ts, src/auth/index.ts, src/payments/stripe.ts, src/users/profile.ts, src/payments/billing.ts
   tokens: 1132/4000 · top score: 0.430 · recall@4000: 100%
 
-Score: 10/10
+- [x] Payments — barrel index re-exports
+  task: "payments barrel re-export stripe billing"
+  files: src/payments/stripe.ts, src/payments/billing.ts, src/payments/index.ts, src/auth/login.ts, src/users/profile.ts, src/api/router.ts, src/auth/session.ts
+  tokens: 1145/4000 · top score: 0.160 · recall@4000: 100%
+
+Score: 11/11
 Mean recall@4000: 100.0%
