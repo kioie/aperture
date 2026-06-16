@@ -47,7 +47,7 @@
     "commander": "^13.1.0",
     "fast-glob": "^3.3.3",
     "ignore": "^7.0.3",
-    "zod": "^3.24.2"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
