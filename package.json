@@ -1,6 +1,7 @@
 {
   "name": "@kioie/aperture",
-  "version": "0.1.7",
+  "version": "0.1.8",
+  "mcpName": "io.github.kioie/aperture",
   "description": "Budget-aware code context bundles for coding agents — graph resonance selection with citations, MCP-native.",
   "type": "module",
   "license": "MIT",
@@ -22,6 +23,7 @@
     "dist",
     "tests/fixtures/sample-repo",
     "tests/fixtures/monorepo",
+    "tests/fixtures/python-repo",
     "llms.txt",
     "AGENTS.md"
   ],
@@ -34,13 +36,19 @@
     "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
+    "aperture",
     "context-engineering",
+    "context-window",
     "coding-agent",
     "cursor",
     "claude-code",
     "mcp",
+    "mcp-server",
     "code-intelligence",
-    "token-budget"
+    "code-context",
+    "token-budget",
+    "agent-tools",
+    "llm-tools"
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",

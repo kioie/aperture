@@ -10,9 +10,9 @@ Sample CLI and MCP output from the built-in fixture repo.
 $ aperture focus "stripe webhook handler payment failed" --format tree
 
 Task: stripe webhook handler payment failed
-Symbols: 13/21 · 528 tok / 4000 budget
+Symbols: 22/23 · 1145 tok / 4000 budget
 
-  src/payments/stripe.ts   L8-35   score=0.147  ████  275 tok
+  src/payments/stripe.ts   L27-30 L13-19 ...  score=0.164  275 tok
     ↳ seed: "stripe" matches symbol path
     ↳ seed: "webhook" matches symbol name
     ↳ seed: "payment" matches symbol context
@@ -23,7 +23,7 @@ Symbols: 13/21 · 528 tok / 4000 budget
     ↳ resonance: handleWebhook calls validateWebhookSignature
 ```
 
-**528 tokens vs reading all indexed files (~47k tokens in this fixture).**
+**1,145 tokens vs reading all indexed files (~47k tokens in a typical monorepo).**
 
 ---
 
@@ -33,9 +33,9 @@ Symbols: 13/21 · 528 tok / 4000 budget
 $ aperture focus "fix login validation bug" --format tree
 
 Task: fix login validation bug
-Symbols: 12/21 · 443 tok / 4000 budget
+Symbols: 21/23 · 1106 tok / 4000 budget
 
-  src/auth/login.ts        L1-8    score=0.333  ██████████  54 tok
+  src/auth/login.ts        L1-3 L5-8  score=0.378  54 tok
     ↳ seed: "login" matches symbol name
     ↳ seed: "validation" matches validateCredentials
   src/api/router.ts        L17-41  score=0.100  ███         109 tok
@@ -81,7 +81,7 @@ Response:
       "reasons": ["resonance: retryPayment exported by stripe, imported by billing"]
     }
   ],
-  "tokens": 528,
+  "tokens": 1145,
   "budget": 4000,
   "symbolsSelected": 8,
   "symbolsTotal": 21
@@ -105,8 +105,8 @@ $ aperture demo
 
   ▶ Payments — webhook
     task:    "stripe webhook handler payment failed"
-    tokens:  528/4000 [████░░░░░░░░░░░░░░░░] 13%
-    symbols: 13/21 selected
+    tokens:  1145/4000 [██████░░░░░░░░░░░░░░] 29%
+    symbols: 22/23 selected
 
     src/payments/stripe.ts  L8-11 L13-19 L27-30 L21-25 L32-35  275tok  score=0.147  ████
       ↳ seed score=3.30
@@ -116,8 +116,8 @@ $ aperture demo
 
   ▶ Auth — login validation
     task:    "fix login validation bug"
-    tokens:  443/4000 [███░░░░░░░░░░░░░░░░░] 11%
-    symbols: 12/21 selected
+    tokens:  1106/4000 [██████░░░░░░░░░░░░░░] 28%
+    symbols: 21/23 selected
 
     src/auth/login.ts  L1-3 L5-8  54tok  score=0.333  ██████████
     src/api/router.ts  L17-17 L24-24 ...  109tok  score=0.100  ███

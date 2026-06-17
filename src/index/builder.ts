@@ -6,6 +6,7 @@ import {
   buildContainmentEdges,
   buildFileExportMap,
   extractCalls,
+  extractNamedImportsPy,
   extractNamedImportsTs,
   extractPythonSymbols,
   extractReExportsTs,
@@ -81,7 +82,7 @@ export async function indexRepository(options: IndexOptions): Promise<{
   const edges: SymbolEdge[] = [];
   const nameIndex = new Map<string, string[]>();
   const fileSymbols = new Map<string, SymbolNode[]>();
-  const fileImports = new Map<string, ReturnType<typeof extractNamedImportsTs>>();
+  const fileImports = new Map<string, ReturnType<typeof extractNamedImportsTs> | ReturnType<typeof extractNamedImportsPy>>();
   const fileContents = new Map<string, string>();
 
   for (const rel of relPaths) {
@@ -100,9 +101,10 @@ export async function indexRepository(options: IndexOptions): Promise<{
 
     fileSymbols.set(rel, symbols);
     fileContents.set(rel, content);
-    if (!abs.endsWith(".py")) {
-      fileImports.set(rel, extractNamedImportsTs(content));
-    }
+    fileImports.set(
+      rel,
+      abs.endsWith(".py") ? extractNamedImportsPy(content) : extractNamedImportsTs(content),
+    );
 
     for (const s of symbols) {
       nodes.set(s.id, s);
@@ -142,6 +144,16 @@ export async function indexRepository(options: IndexOptions): Promise<{
         exportMapCache,
       );
       for (const importName of names) {
+        if (importName === "*") {
+          const targets = fileSymbols.get(targetFile) ?? [];
+          for (const src of srcSymbols) {
+            for (const tgt of targets) {
+              if (src.id === tgt.id || tgt.kind === "module") continue;
+              edges.push({ from: src.id, to: tgt.id, kind: "import", weight: 0.4 });
+            }
+          }
+          continue;
+        }
         const loc = exportMap.get(importName);
         if (!loc) continue;
         const targets = resolveSymbolNodes(loc, fileSymbols);

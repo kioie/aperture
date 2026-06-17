@@ -8,7 +8,8 @@ import { clearDiskCache, indexRepository } from "../src/index/builder.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const sampleRepo = join(__dirname, "../tests/fixtures/sample-repo");
 const monorepo = join(__dirname, "../tests/fixtures/monorepo");
-const BUDGET = 4000;
+const pythonRepo = join(__dirname, "../tests/fixtures/python-repo");
+const BUDGET = Number(process.env.APERTURE_EVAL_BUDGET) || 4000;
 
 interface Case {
   task: string;
@@ -107,6 +108,32 @@ const suites: Suite[] = [
         task: "retry failed billing charge invoice",
         expectPathIncludes: ["billing"],
         description: "Monorepo — billing retry across packages",
+      },
+    ],
+  },
+  {
+    name: "python-repo",
+    repo: pythonRepo,
+    cases: [
+      {
+        task: "fix login validation bug",
+        expectPathIncludes: ["login"],
+        description: "Python — login validation",
+      },
+      {
+        task: "stripe webhook handler payment failed",
+        expectPathIncludes: ["stripe"],
+        description: "Python — webhook handler",
+      },
+      {
+        task: "update user profile email validation",
+        expectPathIncludes: ["profile"],
+        description: "Python — profile validation",
+      },
+      {
+        task: "retry failed billing charge invoice",
+        expectPathIncludes: ["billing"],
+        description: "Python — billing retry",
       },
     ],
   },
