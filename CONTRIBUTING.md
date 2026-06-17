@@ -32,7 +32,7 @@ git clone https://github.com/kioie/aperture
 cd aperture
 npm install
 npm test          # unit + integration tests
-npm run eval      # evaluation suite (15/15 cases across sample-repo + monorepo)
+npm run eval      # evaluation suite (19/19 cases across sample-repo, monorepo, python-repo)
 npm run build     # TypeScript compile
 ```
 
@@ -59,7 +59,7 @@ tests/
   core/cohesion.test.ts
   index/extract.test.ts
   integration/focus.test.ts
-eval/runner.ts          — 15-case evaluation suite (sample-repo + monorepo)
+eval/runner.ts          — 19-case evaluation suite (sample-repo + monorepo + python-repo)
 ```
 
 ## Adding a new language
@@ -67,7 +67,7 @@ eval/runner.ts          — 15-case evaluation suite (sample-repo + monorepo)
 1. Add a parser in `src/index/extract.ts` (see the TypeScript extractor as a template)
 2. Add fixture files in `tests/fixtures/sample-repo/src/<new-lang>/`
 3. Add eval cases in `eval/runner.ts`
-4. Run `npm run eval` — score should stay at 15/15 (or improve)
+4. Run `npm run eval` — score should stay at 19/19 (or improve)
 
 ## Adding eval cases
 
@@ -79,7 +79,7 @@ eval/runner.ts          — 15-case evaluation suite (sample-repo + monorepo)
 ## Submitting a PR
 
 - `npm test` must pass
-- `npm run eval` must pass (score >= current)
+- `npm run eval` must pass (score >= current; 19/19)
 - Keep PRs focused — one feature or fix per PR
 - No AI-generated comments explaining what the code does
 

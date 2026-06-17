@@ -36,13 +36,19 @@
     "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
+    "aperture",
     "context-engineering",
+    "context-window",
     "coding-agent",
     "cursor",
     "claude-code",
     "mcp",
+    "mcp-server",
     "code-intelligence",
-    "token-budget"
+    "code-context",
+    "token-budget",
+    "agent-tools",
+    "llm-tools"
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
