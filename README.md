@@ -43,24 +43,40 @@ Symbols: 21/23 · 1106 tok / 4000 budget
     ↳ resonance: attached via handleLogin
 ```
 
-**Result: 1,106 tokens instead of ~47,000 for this task** (sample-repo fixture; run `aperture demo` to reproduce).
+**Result: 1,106 tokens instead of ~47,000 for this task** (sample-repo fixture; run `npx @kioie/aperture demo` to reproduce).
 
 ---
 
-## Install
+## Quick start
+
+**Try it in 10 seconds — no install:**
+
+```bash
+npx @kioie/aperture demo
+```
+
+Runs Aperture on the built-in sample repo (auth + payments + users + API) and prints a formatted tree with exact token counts.
+
+```bash
+# Focus a task on your repo
+npx @kioie/aperture focus "fix login validation bug" --budget 4000
+
+# Index and warm the symbol graph cache
+npx @kioie/aperture index .
+
+# Environment check + next steps
+npx @kioie/aperture doctor
+```
+
+**Global install (optional):**
 
 ```bash
 npm install -g @kioie/aperture
+aperture demo
 aperture doctor
 ```
 
-Or zero-install with npx:
-
-```bash
-npx @kioie/aperture focus "fix login validation bug" --budget 4000
-```
-
-## Quick start
+## Index and focus
 
 ```bash
 # 1. Index your repo (fast — builds a symbol graph, cached to .aperture-cache/)
@@ -74,9 +90,6 @@ aperture focus "stripe webhook payment failed" --format tree
 
 # 4. Export as markdown for @-mentioning in Cursor
 aperture focus "update user profile validation" --format markdown > .cursor/context.md
-
-# 5. Try the built-in demo (no repo needed)
-aperture demo
 ```
 
 ## Cursor / Claude Code / Codex
@@ -166,7 +179,7 @@ Reproducible examples with exact token counts: [EXAMPLES.md](./EXAMPLES.md).
 ## Demo
 
 ```bash
-aperture demo
+npx @kioie/aperture demo
 ```
 
 Runs Aperture on the built-in sample repo (auth + payments + users + API) and prints a formatted tree. No repo needed.
@@ -196,7 +209,16 @@ const bundle = await focusContext({
 
 ## MCP Registry
 
-Aperture is listed on the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.kioie/aperture`. See [docs/mcp-registry.md](./docs/mcp-registry.md) for validate and publish steps.
+Publish to the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.kioie/aperture`:
+
+```bash
+npm run sync:server              # align server.json with package.json
+aperture registry validate       # schema check
+mcp-publisher login              # one-time GitHub auth
+aperture registry publish        # publish server.json
+```
+
+See [docs/mcp-registry.md](./docs/mcp-registry.md) for details.
 
 ## Contributing
 
