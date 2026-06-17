@@ -3,7 +3,7 @@
 Budget: 4000 tokens per case
 
 ## sample-repo
-Index: cold 20ms · disk cache 1ms
+Index: cold 19ms · disk cache 2ms
 
 - [x] Auth — login validation
   task: "fix login validation bug"
@@ -84,7 +84,7 @@ Index: cold 2ms · disk cache 1ms
   tokens: 644/4000 · top score: 0.409 · recall@4000: 100%
 
 ## python-repo
-Index: cold 2ms · disk cache 1ms
+Index: cold 4ms · disk cache 1ms
 
 - [x] Python — login validation
   task: "fix login validation bug"

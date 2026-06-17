@@ -25,7 +25,7 @@ mcp-publisher login
 mcp-publisher publish server.json
 ```
 
-After publishing, bump `version` in both `package.json` and `server.json` before the next release.
+After publishing, run `npm run sync:server` (or `node scripts/sync-server-json.mjs`) so `server.json` matches `package.json` before the next release.
 
 ## Schema
 

@@ -22,8 +22,16 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm test
       - run: npm run build
+      - run: npm test
+      - name: Coverage report (no Vitest gate)
+        run: >-
+          npx vitest run --coverage
+          --coverage.thresholds.lines=0
+          --coverage.thresholds.branches=0
+          --coverage.thresholds.functions=0
+          --coverage.thresholds.statements=0
+      - run: npm run eval
       - name: Validate MCP registry manifest
         run: |
           if command -v mcp-publisher >/dev/null 2>&1; then
@@ -31,4 +39,3 @@ jobs:
           else
             echo "mcp-publisher not installed; skipping registry validation"
           fi
-      - run: npm run eval
