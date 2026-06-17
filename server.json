@@ -3,7 +3,7 @@
   "name": "io.github.kioie/aperture",
   "title": "Aperture",
   "description": "Budget-aware code context bundles for coding agents. Graph resonance with file citations.",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "websiteUrl": "https://github.com/kioie/aperture",
   "repository": {
     "url": "https://github.com/kioie/aperture",
@@ -18,7 +18,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@kioie/aperture",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

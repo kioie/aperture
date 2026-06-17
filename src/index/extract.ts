@@ -97,6 +97,42 @@ export function extractImportsTs(content: string): string[] {
   return out;
 }
 
+/** Parse Python import statements into module spec + imported symbol names. */
+export function extractNamedImportsPy(content: string): NamedImport[] {
+  const out: NamedImport[] = [];
+  const fromRe = /^from\s+(\.+[\w.]*|\w+(?:\.\w+)*)\s+import\s+(.+)$/gm;
+  const importRe = /^import\s+([\w.]+(?:\s+as\s+\w+)?(?:\s*,\s*[\w.]+(?:\s+as\s+\w+)?)*)\s*$/gm;
+
+  let m: RegExpExecArray | null;
+  while ((m = fromRe.exec(content)) !== null) {
+    const spec = m[1]?.trim();
+    const rest = m[2]?.trim() ?? "";
+    if (!spec) continue;
+    if (rest === "*") {
+      out.push({ spec, names: ["*"] });
+      continue;
+    }
+    const names = rest
+      .split(",")
+      .map((part) => part.trim().split(/\s+as\s+/)[0]?.trim())
+      .filter((n): n is string => Boolean(n) && n !== "(");
+    if (names.length) out.push({ spec, names });
+  }
+
+  while ((m = importRe.exec(content)) !== null) {
+    const parts = (m[1] ?? "").split(",").map((p) => p.trim());
+    for (const part of parts) {
+      const asMatch = part.match(/^([\w.]+)(?:\s+as\s+(\w+))?$/);
+      if (!asMatch?.[1]) continue;
+      const mod = asMatch[1];
+      const alias = asMatch[2] ?? mod.split(".").pop() ?? mod;
+      out.push({ spec: mod, names: [alias] });
+    }
+  }
+
+  return out;
+}
+
 export interface NamedImport {
   spec: string;
   names: string[];
@@ -191,6 +227,32 @@ export function buildFileExportMap(
   }
 
   const content = fileContents.get(file) ?? "";
+
+  if (file.endsWith(".py")) {
+    for (const { spec, names } of extractNamedImportsPy(content)) {
+      const target = resolveImportPath(file, spec, knownFiles);
+      if (!target) continue;
+      const targetMap = buildFileExportMap(
+        target,
+        fileSymbols,
+        fileContents,
+        knownFiles,
+        cache,
+        visiting,
+      );
+      for (const name of names) {
+        if (name === "*") {
+          for (const [n, loc] of targetMap) {
+            if (!map.has(n)) map.set(n, loc);
+          }
+        } else {
+          const loc = targetMap.get(name);
+          if (loc) map.set(name, loc);
+        }
+      }
+    }
+  }
+
   for (const re of extractReExportsTs(content)) {
     const target = resolveImportPath(file, re.spec, knownFiles);
     if (!target) continue;
@@ -242,7 +304,22 @@ export function resolveImportPath(
 ): string | null {
   if (!spec.startsWith(".")) return null;
   const dir = fromFile.includes("/") ? fromFile.slice(0, fromFile.lastIndexOf("/")) : "";
-  const joined = normalizePath(dir ? `${dir}/${spec}` : spec);
+
+  let joined: string;
+  if (spec.includes("/")) {
+    joined = normalizePath(dir ? `${dir}/${spec}` : spec);
+  } else {
+    let dotCount = 0;
+    for (const ch of spec) {
+      if (ch === ".") dotCount += 1;
+      else break;
+    }
+    const modulePath = spec.slice(dotCount).replace(/\./g, "/");
+    const dirParts = dir ? dir.split("/") : [];
+    const parents = Math.max(0, dotCount - 1);
+    for (let i = 0; i < parents; i++) dirParts.pop();
+    joined = normalizePath([...dirParts, modulePath].filter(Boolean).join("/"));
+  }
   const base = joined.replace(/\.(tsx?|jsx?|mjs|cjs)$/, "");
   const candidates = [
     joined,
@@ -252,8 +329,11 @@ export function resolveImportPath(
     `${base}.js`,
     `${base}.jsx`,
     `${base}.mjs`,
+    `${base}.py`,
     `${base}/index.ts`,
     `${base}/index.js`,
+    `${base}/index.py`,
+    `${base}/__init__.py`,
   ];
   for (const c of candidates) {
     if (knownFiles.has(c)) return c;

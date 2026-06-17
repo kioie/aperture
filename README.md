@@ -4,7 +4,7 @@
 
 [![npm](https://img.shields.io/npm/v/@kioie/aperture?color=orange)](https://www.npmjs.com/package/@kioie/aperture)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![eval](https://img.shields.io/badge/eval-15%2F15-brightgreen)](#evaluation)
+[![eval](https://img.shields.io/badge/eval-19%2F19-brightgreen)](#evaluation)
 [![MCP](https://img.shields.io/badge/MCP-native-purple)](docs/cursor.md)
 
 ---
@@ -33,18 +33,17 @@ Total: ~47,000 tokens consumed
 aperture focus "fix login validation bug" --budget 4000
 
 Task: fix login validation bug
-Symbols: 12/21 · 443 tok / 4000 budget
+Symbols: 21/23 · 1106 tok / 4000 budget
 
-  src/auth/login.ts        L1-8    score=0.333  54 tok
-    ↳ seed: "login" matches symbol name
-    ↳ seed: "validation" matches symbol name
-  src/api/router.ts        L17-41  score=0.100  109 tok
-    ↳ resonance: caller of login via handleLogin
-  src/users/profile.ts     L11-28  score=0.000  280 tok
-    ↳ resonance: attached via validateCredentials
+  src/auth/login.ts        L1-8    score=0.378  54 tok
+    ↳ seed: "login" matches symbol login
+    ↳ seed: "login" matches symbol validateCredentials
+  src/api/router.ts        L15-20  score=0.071  317 tok
+    ↳ seed: "login" matches symbol handleLogin
+    ↳ resonance: attached via handleLogin
 ```
 
-**Result: 443 tokens instead of ~47,000 for this task.**
+**Result: 1,106 tokens instead of ~47,000 for this task** (sample-repo fixture; run `aperture demo` to reproduce).
 
 ---
 
@@ -150,12 +149,15 @@ See [SPEC.md](./SPEC.md) for the full algorithm.
 npm run eval
 ```
 
-Current score: **15/15** across sample-repo (auth, payments, users, API, barrels) and monorepo (cross-package imports) fixtures (mean recall@4000: **100%**).
+Current score: **19/19** across sample-repo (auth, payments, users, API, barrels), monorepo (cross-package imports), and python-repo fixtures (mean recall@4000: **100%**).
 
 ```
-sample-repo  — 11 cases · cold index ~200ms · disk cache ~7ms
-monorepo     —  4 cases · cold index ~620ms · disk cache ~70ms
+sample-repo  — 11 cases · cold index ~26ms · disk cache ~2ms
+monorepo     —  4 cases · cold index ~4ms  · disk cache ~1ms
+python-repo  —  4 cases · cold index ~15ms · disk cache ~2ms
 ```
+
+Reproduce: `npm run eval` or `aperture eval`.
 
 See [eval/results.md](./eval/results.md) for the full report.
 

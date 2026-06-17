@@ -3,7 +3,7 @@
 Budget: 4000 tokens per case
 
 ## sample-repo
-Index: cold 305ms · disk cache 13ms
+Index: cold 20ms · disk cache 1ms
 
 - [x] Auth — login validation
   task: "fix login validation bug"
@@ -61,7 +61,7 @@ Index: cold 305ms · disk cache 13ms
   tokens: 1145/4000 · top score: 0.160 · recall@4000: 100%
 
 ## monorepo
-Index: cold 21ms · disk cache 3ms
+Index: cold 2ms · disk cache 1ms
 
 - [x] Monorepo — cross-package auth login
   task: "cross-package login handler in api server"
@@ -83,5 +83,28 @@ Index: cold 21ms · disk cache 3ms
   files: packages/payments/src/billing.ts, apps/api/src/server.ts, packages/payments/src/stripe.ts, packages/shared/src/validate.ts, packages/auth/src/login.ts, packages/auth/src/session.ts
   tokens: 644/4000 · top score: 0.409 · recall@4000: 100%
 
-Score: 15/15
+## python-repo
+Index: cold 2ms · disk cache 1ms
+
+- [x] Python — login validation
+  task: "fix login validation bug"
+  files: src/auth/login.py, src/users/profile.py
+  tokens: 21/4000 · top score: 0.500 · recall@4000: 100%
+
+- [x] Python — webhook handler
+  task: "stripe webhook handler payment failed"
+  files: src/payments/stripe.py, src/payments/billing.py, src/payments/__init__.py
+  tokens: 31/4000 · top score: 0.308 · recall@4000: 100%
+
+- [x] Python — profile validation
+  task: "update user profile email validation"
+  files: src/auth/login.py, src/users/profile.py
+  tokens: 21/4000 · top score: 0.353 · recall@4000: 100%
+
+- [x] Python — billing retry
+  task: "retry failed billing charge invoice"
+  files: src/payments/billing.py, src/payments/stripe.py
+  tokens: 4/4000 · top score: 0.442 · recall@4000: 100%
+
+Score: 19/19
 Mean recall@4000: 100.0%

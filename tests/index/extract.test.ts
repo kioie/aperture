@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildFileExportMap,
+  extractNamedImportsPy,
   extractReExportsTs,
   extractTypeScriptSymbols,
   isBarrelFile,
@@ -149,5 +150,33 @@ describe("buildFileExportMap", () => {
 
     expect(second).toBe(first);
     expect(cache.size).toBe(2);
+  });
+});
+
+describe("extractNamedImportsPy", () => {
+  it("parses from-import and import statements", () => {
+    const src = `
+from ..auth.login import login, validate_credentials
+from .stripe import handle_stripe_webhook
+import os
+`;
+    const imports = extractNamedImportsPy(src);
+    expect(imports.some((i) => i.spec === "..auth.login" && i.names.includes("login"))).toBe(true);
+    expect(imports.some((i) => i.spec === ".stripe")).toBe(true);
+    expect(imports.some((i) => i.names.includes("os"))).toBe(true);
+  });
+});
+
+describe("resolveImportPath python", () => {
+  it("resolves relative python imports", () => {
+    const known = new Set([
+      "src/auth/login.py",
+      "src/auth/__init__.py",
+      "src/payments/stripe.py",
+    ]);
+    expect(resolveImportPath("src/api/router.py", "../auth/login", known)).toBe(
+      "src/auth/login.py",
+    );
+    expect(resolveImportPath("src/auth/__init__.py", ".login", known)).toBe("src/auth/login.py");
   });
 });

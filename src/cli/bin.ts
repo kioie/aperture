@@ -176,6 +176,22 @@ program
     );
   });
 
+program
+  .command("eval")
+  .description("Run the built-in evaluation suite (recall@budget on fixtures)")
+  .option("-b, --budget <n>", "Token budget per case", "4000")
+  .action(async (opts: { budget: string }) => {
+    const { spawn } = await import("node:child_process");
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const runner = join(__dirname, "../../eval/runner.ts");
+    const child = spawn("npx", ["tsx", runner], {
+      stdio: "inherit",
+      env: { ...process.env, APERTURE_EVAL_BUDGET: opts.budget },
+    });
+    child.on("exit", (code) => process.exit(code ?? 1));
+  });
+
 program.parse();
 
 function printPlain(bundle: Awaited<ReturnType<typeof focusContext>>, indent = ""): void {
