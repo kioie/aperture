@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { join, dirname } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
+import { execSync, spawn, spawnSync } from "node:child_process";
 import { focusContext, indexRepository } from "../index.js";
 import { readBundleSnippet } from "../index/builder.js";
-import { getVersion } from "../version.js";
+import { APERTURE_VERSION } from "../version.js";
 
 const program = new Command();
 
 program
   .name("aperture")
   .description("Budget-aware code context bundles for agents")
-  .version(getVersion());
+  .version(APERTURE_VERSION);
 
 program
   .command("focus")
@@ -72,6 +74,10 @@ program
     };
 
     line(/^v(2[0-9]|[3-9][0-9])/.test(process.version), `Node.js ${process.version} (>= 20 required)`);
+    console.log(`✓ aperture CLI v${APERTURE_VERSION}`);
+
+    const npx = spawnSync("npx", ["--version"], { encoding: "utf8" });
+    line(npx.status === 0, npx.status === 0 ? "npx available (zero-install MCP setup)" : "npx not found — install Node.js npm");
 
     try {
       const { focusContext } = await import("../index.js");
@@ -90,14 +96,25 @@ program
       }
     }
 
+    const publisher = spawnSync("mcp-publisher", ["validate", "--help"], { encoding: "utf8" });
+    if (publisher.status === 0) {
+      console.log("✓ mcp-publisher available (aperture registry validate/publish)");
+    } else {
+      console.log("· mcp-publisher not installed — optional for MCP Registry publish");
+    }
+
     const ok = checks.every((c) => c.pass);
 
     if (opts.json) {
-      console.log(JSON.stringify({ ok, checks, version: getVersion() }, null, 2));
+      console.log(JSON.stringify({ ok, checks, version: APERTURE_VERSION }, null, 2));
     } else {
       for (const c of checks) {
         console.log(c.pass ? `✓ ${c.message}` : `✗ ${c.message}`);
       }
+      console.log("\nNext steps:");
+      console.log("  npx @kioie/aperture demo           # see token savings on sample repo");
+      console.log("  npx @kioie/aperture cursor         # MCP snippet for Cursor");
+      console.log("  aperture focus \"<task>\" --format tree");
     }
 
     process.exit(ok ? 0 : 1);
@@ -175,6 +192,34 @@ program
       ),
     );
   });
+
+program
+  .command("registry")
+  .description("MCP Registry helpers (validate server.json, publish)")
+  .addCommand(
+    new Command("validate")
+      .description("Validate server.json against the MCP Registry schema")
+      .argument("[path]", "Path to server.json", "server.json")
+      .action((path: string) => {
+        const safePath = resolve(process.cwd(), path);
+        try {
+          execSync(`mcp-publisher validate ${JSON.stringify(safePath)}`, { stdio: "inherit" });
+        } catch {
+          const raw = readFileSync(safePath, "utf8");
+          JSON.parse(raw);
+          console.log(`✓ ${path} is valid JSON (install mcp-publisher for schema validation)`);
+        }
+      }),
+  )
+  .addCommand(
+    new Command("publish")
+      .description("Publish server.json to the MCP Registry (requires mcp-publisher login)")
+      .argument("[path]", "Path to server.json", "server.json")
+      .action((path: string) => {
+        const safePath = resolve(process.cwd(), path);
+        execSync(`mcp-publisher publish ${JSON.stringify(safePath)}`, { stdio: "inherit" });
+      }),
+  );
 
 program
   .command("eval")
