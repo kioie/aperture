@@ -192,6 +192,10 @@ const bundle = await focusContext({
 - [docs/agent-api.json](./docs/agent-api.json) — JSON schemas with example responses
 - [integrations/](./integrations/) — Cursor, Claude Code, and GitHub Action configs
 
+## MCP Registry
+
+Aperture is listed on the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.kioie/aperture`. See [docs/mcp-registry.md](./docs/mcp-registry.md) for validate and publish steps.
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md).

@@ -1,18 +1,25 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.kioie/aperture",
   "title": "Aperture",
-  "description": "Budget-aware code context bundles for coding agents. Graph resonance selection with file citations under a token budget.",
-  "version": "0.1.4",
-  "homepage": "https://github.com/kioie/aperture",
+  "description": "Budget-aware code context bundles for coding agents. Graph resonance with file citations.",
+  "version": "0.1.7",
+  "websiteUrl": "https://github.com/kioie/aperture",
+  "repository": {
+    "url": "https://github.com/kioie/aperture",
+    "source": "github",
+    "id": "1270879326"
+  },
   "license": "MIT",
   "categories": ["developer-tools", "ai-agents", "mcp"],
   "tags": ["mcp", "context-engineering", "code-intelligence", "cursor", "claude-code", "coding-agent", "token-budget"],
   "packages": [
     {
       "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@kioie/aperture",
-      "version": "0.1.4",
+      "version": "0.1.7",
+      "runtimeHint": "npx",
       "transport": {
         "type": "stdio"
       },
