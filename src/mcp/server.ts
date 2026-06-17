@@ -6,15 +6,14 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { resolveRepoRoot } from "../core/paths.js";
 import { focusContext, warmIndex, readBundleSnippet } from "../index.js";
-import { getVersion } from "../version.js";
+import { APERTURE_VERSION } from "../version.js";
 
 let lastRepo = resolveRepoRoot(process.cwd());
 let lastBundle: Awaited<ReturnType<typeof focusContext>> | null = null;
 
 export async function startApertureMcpServer(): Promise<void> {
-  const version = getVersion();
   const server = new Server(
-    { name: "aperture", version },
+    { name: "aperture", version: APERTURE_VERSION },
     { capabilities: { tools: {} } },
   );
 

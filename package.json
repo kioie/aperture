@@ -1,8 +1,19 @@
 {
   "name": "@kioie/aperture",
   "version": "0.1.8",
+  "description": "Budget-aware code context bundles for coding agents — graph resonance selection with citations, MCP-native. Works with Cursor, Claude Code, and any MCP client.",
+  "homepage": "https://github.com/kioie/aperture#readme",
+  "bugs": {
+    "url": "https://github.com/kioie/aperture/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "mcpName": "io.github.kioie/aperture",
-  "description": "Budget-aware code context bundles for coding agents — graph resonance selection with citations, MCP-native.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kioie/aperture.git"
+  },
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -21,11 +32,15 @@
   },
   "files": [
     "dist",
+    "scripts",
+    "server.json",
     "tests/fixtures/sample-repo",
     "tests/fixtures/monorepo",
     "tests/fixtures/python-repo",
     "llms.txt",
-    "AGENTS.md"
+    "AGENTS.md",
+    "docs",
+    "integrations"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -33,22 +48,30 @@
     "test:coverage": "vitest run --coverage",
     "eval": "tsx eval/runner.ts",
     "lint": "tsc -p tsconfig.json --noEmit",
-    "prepublishOnly": "npm run build && npm test"
+    "sync:server": "node scripts/sync-server-json.mjs",
+    "prepublishOnly": "node scripts/sync-server-json.mjs && npm run build && npm test && npm run eval"
   },
   "keywords": [
-    "aperture",
-    "context-engineering",
-    "context-window",
-    "coding-agent",
+    "mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "mcp-registry",
     "cursor",
     "claude-code",
-    "mcp",
-    "mcp-server",
+    "codex",
+    "ai-agents",
+    "coding-agent",
+    "agent-tools",
+    "context-engineering",
+    "context-window",
     "code-intelligence",
     "code-context",
     "token-budget",
-    "agent-tools",
-    "llm-tools"
+    "token-optimization",
+    "llm",
+    "openai",
+    "anthropic",
+    "aperture"
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
